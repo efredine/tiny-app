@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+</head>
+<body>
+<div class="container">
+  <h2>Your Short URLs</h2>
+  <a href="#">Add a New URL</a>
+  <table>
+    <% Object.keys(urls).forEach(shortUrl => { %>
+      <tr>
+        <td><%= shortUrl %></td>
+        <td><%= urls[shortUrl] %></td>
+        <td><a href="#">Edit</a></td>
+        <td><a href="#">Delete</a></td>
+      </tr>
+    <% }) %>
+  </table>
+</div>
+</body>
+</html>
