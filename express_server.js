@@ -39,11 +39,15 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   let longUrl = urlDatabase[req.params.id];
-  res.render('urls_show', {
-    shortUrl: req.params.id,
-    baseUrl: BASE_URL,
-    originalUrl: longUrl
-  });
+  if (longUrl) {
+    res.render('urls_show', {
+      shortUrl: req.params.id,
+      baseUrl: BASE_URL,
+      originalUrl: longUrl
+    });
+  } else {
+    res.status(404).send('Sorry cant find that!');
+  }
 });
 
 app.post("/urls", (req, res) => {
@@ -51,6 +55,15 @@ app.post("/urls", (req, res) => {
   let shortUrl = generateRandomString();
   urlDatabase[shortUrl] = longUrl;
   res.redirect("/urls/" + shortUrl);
+});
+
+app.get("/u/:shortUrl", (req, res) => {
+  let longUrl = urlDatabase[req.params.shortUrl];
+  if (longUrl) {
+    res.redirect(longUrl);
+  } else {
+    res.status(404).send('Sorry cant find that!');
+  }
 });
 
 app.listen(PORT, () => {
