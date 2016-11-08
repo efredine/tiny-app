@@ -1,16 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Document</title>
+  <%- include('partials/_header') %>
 </head>
 <body>
 <div class="container">
   <h2>Your Short URLs</h2>
   <a href="#">Add a New URL</a>
-  <table>
+  <table class="table">
     <% Object.keys(urls).forEach(shortUrl => { %>
-      <tr>
+      <tr class="table">
         <td><%= shortUrl %></td>
         <td><%= urls[shortUrl] %></td>
         <td><a href="#">Edit</a></td>
