@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
+const HOST = process.env.HOST || 'localhost';
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -22,7 +23,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = {urls: urlDatabase};
+  let templateVars = {baseUrl: `https://${HOST}:8080/`, urls: urlDatabase};
   res.render('urls_index', templateVars);
 });
 

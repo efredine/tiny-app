@@ -8,9 +8,15 @@
   <h2>Your Short URLs</h2>
   <a href="#">Add a New URL</a>
   <table class="table">
+    <tr>
+      <th>Short URL</th>
+      <th>Original URL</th>
+      <th></th>
+      <th></th>
+    </tr>
     <% Object.keys(urls).forEach(shortUrl => { %>
       <tr class="table">
-        <td><%= shortUrl %></td>
+        <td><%= baseUrl + shortUrl %></td>
         <td><%= urls[shortUrl] %></td>
         <td><a href="#">Edit</a></td>
         <td><a href="#">Delete</a></td>
