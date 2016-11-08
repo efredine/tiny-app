@@ -17,7 +17,7 @@ function generateRandomString() {
 }
 
 app.get("/", (req, res) => {
-  res.end("Hello!");
+  res.redirect("/urls");
 });
 
 app.get("/urls.json", (req, res) => {
@@ -47,8 +47,10 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send(generateRandomString());
+  let longUrl = req.body.longUrl;
+  let shortUrl = generateRandomString();
+  urlDatabase[shortUrl] = longUrl;
+  res.redirect("/urls/" + shortUrl);
 });
 
 app.listen(PORT, () => {
