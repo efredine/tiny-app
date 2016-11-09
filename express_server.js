@@ -20,6 +20,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+function getSessionVars(req, res, existingVars = {}) {
+  return Object.assign({userName: req.cookies.userName}, existingVars);
+}
+
 function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
@@ -28,7 +32,7 @@ function handle400Error(req, res, overrides = {}) {
   let notFoundVars = Object.assign({}, defaultNotFound, overrides);
   notFoundVars.requestedUrl = req.url;
   res.status(notFoundVars.statusCode);
-  res.render('not_found', notFoundVars);
+  res.render('not_found', getSessionVars(req, res, notFoundVars));
 }
 
 app.get("/cookies/delete", (req, res) => {
@@ -66,9 +70,14 @@ app.post("/login", (req, res) => {
   }
 });
 
+app.post("/logout", (req, res) => {
+  res.clearCookie("userName");
+  res.redirect("/");
+});
+
 app.get("/urls", (req, res) => {
   let templateVars = {baseUrl: BASE_URL, urls: urlDatabase};
-  res.render('urls_index', templateVars);
+  res.render('urls_index', getSessionVars(req, res, templateVars));
 });
 
 app.get("/urls/new", (req, res) => {
