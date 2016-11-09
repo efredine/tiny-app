@@ -5,6 +5,7 @@ const HOST = process.env.HOST || 'localhost';
 const BASE_URL =  `http://${HOST}:8080/u/`;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const models = require('./models');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set("view engine", "ejs");
@@ -21,7 +22,10 @@ const urlDatabase = {
 };
 
 function getSessionVars(req, res, existingVars = {}) {
-  return Object.assign({userName: req.cookies.userName}, existingVars);
+  let userId = req.cookies.userId;
+  let userRecord = models.getUserForId(userId);
+  let userName = userRecord ? userRecord.email : undefined;
+  return Object.assign({userName: userName}, existingVars);
 }
 
 function generateRandomString() {
@@ -61,7 +65,12 @@ app.get("/register", (req, res) =>{
 });
 
 app.post("/register", (req, res) =>{
-  res.send(JSON.stringify(req.body));
+  let userId = models.insertUser({
+    email: req.body.email,
+    password: req.body.password
+  });
+  res.cookie("userId", userId);
+  res.redirect("/");
 });
 
 app.post("/login", (req, res) => {
@@ -79,7 +88,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("userName");
+  res.clearCookie("userId");
   res.redirect("/");
 });
 
