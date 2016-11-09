@@ -92,6 +92,11 @@ app.get("/u/:shortUrl", (req, res) => {
   }
 });
 
+// Catch any requests not caught be defined routes.
+app.all("*", (req, res) => {
+  handle400Error(req, res);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
