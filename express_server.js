@@ -50,6 +50,16 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  let longUrl = urlDatabase[req.params.id];
+  if (longUrl) {
+    delete urlDatabase[req.params.id];
+    res.redirect('/urls');
+  } else {
+    res.status(404).send('Sorry cant find that!');
+  }
+});
+
 app.post("/urls", (req, res) => {
   let longUrl = req.body.longUrl;
   let shortUrl = generateRandomString();
