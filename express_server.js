@@ -97,8 +97,8 @@ app.post("/login", (req, res) => {
     res.redirect("/");
   } else {
     handle400Error(req, res, {
-      statusCode: 401,
-      statusMessage: "Unauthorized",
+      statusCode: 403,
+      statusMessage: "Forbidden",
       detailedMessage: "User name or password incorrect."
     });
   }
