@@ -8,7 +8,8 @@
     <%- include('partials/_header') %>
     <div class="row">
       <div class="col-xs-12">
-        <h1><%= shortUrl %></h1>
+        <h1><a href="/urls">My Links:</a> <%= shortUrl %></h1>
+        <p><a href="<%= baseUrl + shortUrl %>"><%= baseUrl + shortUrl %></a></p>
         <form action="/urls/<%= shortUrl %>" method="POST">
           <div class="form-group">
             <label for="longUrl">Long URL:</label>
