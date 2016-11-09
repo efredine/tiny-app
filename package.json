@@ -19,6 +19,7 @@
   "homepage": "https://github.com/efredine/tiny-app#readme",
   "dependencies": {
     "body-parser": "^1.15.2",
+    "cookie-parser": "^1.4.3",
     "ejs": "^2.5.2",
     "express": "^4.14.0"
   }
