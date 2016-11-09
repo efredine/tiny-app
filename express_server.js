@@ -81,18 +81,18 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  res.render("urls_new", getSessionVars(req, res));
 });
 
 app.get("/urls/:id", (req, res) => {
   let longUrl = urlDatabase[req.params.id];
   if (longUrl) {
-    res.render('urls_show', {
+    res.render('urls_show', getSessionVars(req, res, {
       shortUrl: req.params.id,
       baseUrl: BASE_URL,
       longUrl: longUrl,
       edit: req.query.edit
-    });
+    }));
   } else {
     handle400Error(req, res);
   }
