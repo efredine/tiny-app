@@ -56,6 +56,14 @@ app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
+app.get("/register", (req, res) =>{
+  res.render('register', getSessionVars(req, res));
+});
+
+app.post("/register", (req, res) =>{
+  res.send(JSON.stringify(req.body));
+});
+
 app.post("/login", (req, res) => {
   let userName = req.body.userName;
   if(userName) {
