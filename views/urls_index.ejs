@@ -17,8 +17,8 @@
     </tr>
     <% Object.keys(urls).forEach(shortUrl => { %>
       <tr class="table">
-        <td><%= baseUrl + shortUrl %></td>
-        <td><%= urls[shortUrl] %></td>
+        <td><a href="<%= baseUrl + shortUrl %>"><%= baseUrl + shortUrl %></a></td>
+        <td><a href="<%= urls[shortUrl] %>"><%= urls[shortUrl] %></a></td>
         <td><a href="/urls/<%= shortUrl %>">Edit</a></td>
         <td><form method="POST" action="/urls/<%= shortUrl %>/delete" ><input type='submit' value='Delete'></form></td>
       </tr>
