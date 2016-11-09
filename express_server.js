@@ -4,7 +4,9 @@ const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || 'localhost';
 const BASE_URL =  `http://${HOST}:8080/u/`;
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser');
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 app.set("view engine", "ejs");
 
 const defaultNotFound = {
@@ -28,6 +30,23 @@ function handle400Error(req, res, overrides = {}) {
   res.status(notFoundVars.statusCode);
   res.render('not_found', notFoundVars);
 }
+
+app.get("/cookies/delete", (req, res) => {
+  let cookies = req.cookies;
+  Object.keys(cookies).forEach(cookieKey => {
+    res.clearCookie(cookieKey);
+  });
+  res.end("Cookies deleted.");
+});
+
+app.get("/cookies", (req, res) => {
+  res.cookie('cat', 'scrubbie');
+  res.writeHead(200, {'Content-Type': 'application/json'});
+  let cookies = req.cookies;
+  console.log(cookies);
+  res.write(JSON.stringify(cookies));
+  res.end();
+});
 
 app.get("/", (req, res) => {
   res.redirect("/urls");
