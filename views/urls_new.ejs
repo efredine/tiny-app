@@ -6,10 +6,14 @@
   <body>
     <div class="container">
       <%- include('partials/_header') %>
-      <form action="/urls" method="POST" style="margin:150px;">
-        <label for="longURL">Enter a URL:</label>
-        <input id="longUrl" type="text" name="longUrl" placeholder="http://" style="width: 300px">
-        <input class="btn btn-primary" type="submit" value="Submit">
+      <form action="/urls" method="POST">
+        <div class="form-group">
+          <label for="longURL">Enter a URL to shorten:</label>
+          <input class="form-control" id="longUrl" type="text" name="longUrl" placeholder="http://">
+        </div>
+        <div class="form-group">
+          <input class="btn btn-success btn-block" type="submit" value="Shorten">
+        </div>
       </form>
     </div>
   </div>
