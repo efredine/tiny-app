@@ -61,7 +61,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/register", (req, res) =>{
-  res.render('register', getSessionVars(req, res));
+  res.render('auth', getSessionVars(req, res));
 });
 
 app.post("/register", (req, res) =>{
