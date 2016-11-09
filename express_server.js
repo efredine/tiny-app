@@ -54,23 +54,6 @@ function handle400Error(req, res, overrides = {}) {
   res.render('not_found', getSessionVars(req, res, notFoundVars));
 }
 
-app.get("/cookies/delete", (req, res) => {
-  let cookies = req.cookies;
-  Object.keys(cookies).forEach(cookieKey => {
-    res.clearCookie(cookieKey);
-  });
-  res.end("Cookies deleted.");
-});
-
-app.get("/cookies", (req, res) => {
-  res.cookie('cat', 'scrubbie');
-  res.writeHead(200, {'Content-Type': 'application/json'});
-  let cookies = req.cookies;
-  console.log(cookies);
-  res.write(JSON.stringify(cookies));
-  res.end();
-});
-
 app.get("/", (req, res) => {
   res.redirect("/urls");
 });
