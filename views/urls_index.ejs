@@ -4,10 +4,9 @@
   <%- include('partials/_head') %>
 </head>
 <body>
-<%- include('partials/_header') %>
 <div class="container">
-  <h2>Your Short URLs</h2>
-  <a href="/urls/new">Add a New URL</a>
+  <%- include('partials/_header') %>
+  <h2>Your Short URLs <a class="btn btn-primary" href="/urls/new">Shorten a new url...</a></h2>
   <table class="table">
     <tr>
       <th>Short URL</th>
@@ -19,8 +18,8 @@
       <tr class="table">
         <td><a href="<%= baseUrl + shortUrl %>"><%= baseUrl + shortUrl %></a></td>
         <td><a href="<%= urls[shortUrl] %>"><%= urls[shortUrl] %></a></td>
-        <td><a href="/urls/<%= shortUrl %>">Edit</a></td>
-        <td><form method="POST" action="/urls/<%= shortUrl %>/delete" ><input type='submit' value='Delete'></form></td>
+        <td><a class="btn btn-primary" href="/urls/<%= shortUrl %>">Edit</a></td>
+        <td><form method="POST" action="/urls/<%= shortUrl %>/delete" ><input class="btn btn-danger" type='submit' value='Delete'></form></td>
       </tr>
     <% }) %>
   </table>

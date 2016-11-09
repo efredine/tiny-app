@@ -3,18 +3,18 @@
 <head>
   <%- include('partials/_head') %>
 </head>
-<body>
-  <%- include('partials/_header') %>
+<body style="font-size:20px; padding:50px;">
   <div class="container">
-  <div class="row">
-    <div class="col-lg-12">
-      <h2>Short URL: <%= shortUrl %></h2>
-      <form action="/urls/<%= shortUrl %>" method="POST" style="margin:150px;">
-        <input id="longUrl" type="text" name="longUrl" value="<%= longUrl %>" style="width: 300px">
-        <input type="submit" value="Update">
-      </form>
+    <%- include('partials/_header') %>
+    <div class="row">
+      <div class="col-lg-12">
+        <h2>Short URL: <%= shortUrl %></h2>
+        <form action="/urls/<%= shortUrl %>" method="POST" style="margin:150px;">
+          <input id="longUrl" type="text" name="longUrl" value="<%= longUrl %>" style="width: 300px">
+          <input class="btn btn-primary" type="submit" value="Update">
+        </form>
+      </div>
     </div>
-  </div>
   </div>
 </body>
 </html>
