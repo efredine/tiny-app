@@ -47,7 +47,8 @@ app.get("/urls/:id", (req, res) => {
     res.render('urls_show', {
       shortUrl: req.params.id,
       baseUrl: BASE_URL,
-      longUrl: longUrl
+      longUrl: longUrl,
+      edit: req.query.edit
     });
   } else {
     handle400Error(req, res);

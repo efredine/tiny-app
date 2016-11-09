@@ -13,15 +13,23 @@
         <form action="/urls/<%= shortUrl %>" method="POST">
           <div class="form-group">
             <label for="longUrl">Long URL:</label>
-            <input class="form-control" id="longUrl" type="text" name="longUrl" value="<%= longUrl %>">
+            <input class="form-control" id="longUrl" type="text" name="longUrl" value="<%= longUrl %>" <%= edit ? "" : "disabled"%>>
           </div>
-          <div class="form-group">
-            <input class="btn btn-primary btn-block" type="submit" value="Update">
-          </div>
+          <% if(edit) { %>
+            <div class="form-group">
+              <input class="btn btn-primary btn-block" type="submit" value="Update">
+            </div>
+          <% } %>
         </form>
-        <form method="POST" action="/urls/<%= shortUrl %>/delete" >
-          <input class="btn btn-danger btn-block" type='submit' value='Delete'>
-        </form>
+        <% if(edit) { %>
+          <form method="POST" action="/urls/<%= shortUrl %>/delete" >
+            <input class="btn btn-danger btn-block" type='submit' value='Delete'>
+            <a class="btn btn-default btn-block" href="/urls">Cancel</a>
+          </form>
+        <% } else { %>
+          <a class="btn btn-primary btn-block" href="/urls/<%= shortUrl %>?edit=true">Edit</a>
+          <a class="btn btn-default btn-block" href="/urls">Done</a>
+        <% } %>
       </div>
     </div>
   </div>
