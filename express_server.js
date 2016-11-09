@@ -52,6 +52,20 @@ app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
+app.post("/login", (req, res) => {
+  let userName = req.body.userName;
+  if(userName) {
+    res.cookie("userName", userName);
+    res.redirect("/");
+  } else {
+    handle400Error(req, res, {
+      statusCode: 401,
+      statusMessage: "Unauthorized",
+      detailedMessage: userName ? `${userName} is an invalid user name` : "You need to enter a value for the user name."
+    });
+  }
+});
+
 app.get("/urls", (req, res) => {
   let templateVars = {baseUrl: BASE_URL, urls: urlDatabase};
   res.render('urls_index', templateVars);
