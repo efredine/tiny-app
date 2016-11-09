@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || 'localhost';
-const BASE_URL =  `https://${HOST}:8080/`;
+const BASE_URL =  `http://${HOST}:8080/u/`;
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -43,8 +43,20 @@ app.get("/urls/:id", (req, res) => {
     res.render('urls_show', {
       shortUrl: req.params.id,
       baseUrl: BASE_URL,
-      originalUrl: longUrl
+      longUrl: longUrl
     });
+  } else {
+    res.status(404).send('Sorry cant find that!');
+  }
+});
+
+// update
+app.post("/urls/:id", (req, res) => {
+  let longUrl = req.body.longUrl;
+  let shortUrl = req.params.id;
+  if (shortUrl) {
+    urlDatabase[shortUrl] = longUrl;
+    res.redirect('/urls');
   } else {
     res.status(404).send('Sorry cant find that!');
   }

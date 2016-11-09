@@ -19,7 +19,7 @@
       <tr class="table">
         <td><%= baseUrl + shortUrl %></td>
         <td><%= urls[shortUrl] %></td>
-        <td><a href="#">Edit</a></td>
+        <td><a href="/urls/<%= shortUrl %>">Edit</a></td>
         <td><form method="POST" action="/urls/<%= shortUrl %>/delete" ><input type='submit' value='Delete'></form></td>
       </tr>
     <% }) %>
