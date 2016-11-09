@@ -4,6 +4,11 @@ const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || 'localhost';
 const BASE_URL =  `http://${HOST}:8080/u/`;
 const bodyParser = require("body-parser");
+const defaultNotFound = {
+  statusCode: 404,
+  statusMessage: "Not found",
+  detailedMessage: "Couldn't find that URL."
+};
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
@@ -16,16 +21,15 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2, 8);
 }
 
+function handle400Error(req, res, overrides = {}) {
+  let notFoundVars = Object.assign({}, defaultNotFound, overrides);
+  notFoundVars.requestedUrl = req.url;
+  res.status(notFoundVars.statusCode);
+  res.render('not_found', notFoundVars);
+}
+
 app.get("/", (req, res) => {
   res.redirect("/urls");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.end("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.get("/urls", (req, res) => {
@@ -46,7 +50,7 @@ app.get("/urls/:id", (req, res) => {
       longUrl: longUrl
     });
   } else {
-    res.status(404).send('Sorry cant find that!');
+    handle400Error(req, res);
   }
 });
 
@@ -58,7 +62,7 @@ app.post("/urls/:id", (req, res) => {
     urlDatabase[shortUrl] = longUrl;
     res.redirect('/urls');
   } else {
-    res.status(404).send('Sorry cant find that!');
+    handle400Error(req, res);
   }
 });
 
@@ -68,7 +72,7 @@ app.post("/urls/:id/delete", (req, res) => {
     delete urlDatabase[req.params.id];
     res.redirect('/urls');
   } else {
-    res.status(404).send('Sorry cant find that!');
+    handle400Error(req, res);
   }
 });
 
@@ -84,7 +88,7 @@ app.get("/u/:shortUrl", (req, res) => {
   if (longUrl) {
     res.redirect(longUrl);
   } else {
-    res.status(404).send('Sorry cant find that!');
+    handle400Error(req, res);
   }
 });
 

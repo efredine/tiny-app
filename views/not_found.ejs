@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/_head') %>
+</head>
+<body>
+<div class="container">
+  <%- include('partials/_header') %>
+  <div class="center-block">
+    <h1><%= statusCode %></h1>
+    <h1><%= statusMessage %></h1>
+    <p><%= requestedUrl %></p>
+    <p><%= detailedMessage %></p>
+    <h2><a href="/urls">Back to my URLs</a></h2>
+  </div>
+</div>
+</body>
+</html>
