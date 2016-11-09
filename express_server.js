@@ -21,6 +21,21 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+function authenticate(req, res) {
+  let email = req.body.email;
+  let userId = models.findUserId("email", email);
+  if(!userId) {
+    return false;
+  }
+  let userRecord = models.getUserForId(userId);
+  if(userRecord.password === req.body.password) {
+    res.cookie("userId", userId);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function getSessionVars(req, res, existingVars = {}) {
   let userId = req.cookies.userId;
   let userRecord = models.getUserForId(userId);
@@ -61,7 +76,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/register", (req, res) =>{
-  res.render('auth', getSessionVars(req, res));
+  res.render('auth', getSessionVars(req, res, {postUrl: '/register', buttonLabel: 'Register'}));
 });
 
 app.post("/register", (req, res) =>{
@@ -73,16 +88,18 @@ app.post("/register", (req, res) =>{
   res.redirect("/");
 });
 
+app.get("/login", (req, res) =>{
+  res.render('auth', getSessionVars(req, res, {postUrl: '/login', buttonLabel: "Log in"}));
+});
+
 app.post("/login", (req, res) => {
-  let userName = req.body.userName;
-  if(userName) {
-    res.cookie("userName", userName);
+  if(authenticate(req, res)) {
     res.redirect("/");
   } else {
     handle400Error(req, res, {
       statusCode: 401,
       statusMessage: "Unauthorized",
-      detailedMessage: userName ? `${userName} is an invalid user name` : "You need to enter a value for the user name."
+      detailedMessage: "User name or password incorrect."
     });
   }
 });

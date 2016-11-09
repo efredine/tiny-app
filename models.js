@@ -23,7 +23,7 @@ function get(model, id) {
 function find(modelKey, field, value) {
   let model = data[modelKey];
   return Object.keys(model).find(id => {
-    return mode[id][field] === value;
+    return model[id][field] === value;
   });
 }
 
