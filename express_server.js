@@ -4,13 +4,14 @@ const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || 'localhost';
 const BASE_URL =  `http://${HOST}:8080/u/`;
 const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+app.set("view engine", "ejs");
+
 const defaultNotFound = {
   statusCode: 404,
   statusMessage: "Not found",
   detailedMessage: "Couldn't find that URL."
 };
-app.use(bodyParser.urlencoded({extended: true}));
-app.set("view engine", "ejs");
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
