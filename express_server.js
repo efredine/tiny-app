@@ -197,9 +197,9 @@ app.post("/urls", (req, res) => {
 
 // redirection
 app.get("/u/:shortUrl", (req, res) => {
-  let longUrl = urlDatabase[req.params.shortUrl];
-  if (longUrl) {
-    res.redirect(longUrl);
+  let urlRecord = models.getUrlForId(req.params.shortUrl);
+  if (urlRecord && urlRecord.longUrl) {
+    res.redirect(urlRecord.longUrl);
   } else {
     handle400Error(req, res);
   }
