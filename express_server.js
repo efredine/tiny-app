@@ -82,7 +82,7 @@ urlRoutes(app);
 
 // Catch any requests not caught be defined routes.
 app.all("*", (req, res) => {
-  handle400Error(req, res);
+  renderNotFound(req, res, getSessionVars(req, res));
 });
 
 app.listen(PORT, () => {
