@@ -11,6 +11,7 @@ const authRoutes = require('./auth_routes');
 const urlRoutes = require('./url_routes');
 require('./render_helpers')();
 
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
