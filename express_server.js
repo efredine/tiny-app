@@ -21,6 +21,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+function loggedInUser(req, res) {
+  let userId = req.cookies.userId;
+  let userRecord = models.getUserForId(userId);
+  return userRecord;
+}
+
 function authenticate(req, res) {
   let email = req.body.email;
   let userId = models.findUserId("email", email);
@@ -55,6 +61,10 @@ function handle400Error(req, res, overrides = {}) {
 }
 
 app.get("/", (req, res) => {
+  if(!loggedInUser(req, res)) {
+    res.redirect("/login");
+    return;
+  }
   res.redirect("/urls");
 });
 
@@ -88,20 +98,36 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
+  if(!loggedInUser(req, res)) {
+    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauto"});
+    return;
+  }
   res.clearCookie("userId");
   res.redirect("/");
 });
 
 app.get("/urls", (req, res) => {
+  if(!loggedInUser(req, res)) {
+    res.redirect("/login");
+    return;
+  }
   let templateVars = {baseUrl: BASE_URL, urls: urlDatabase};
   res.render('urls_index', getSessionVars(req, res, templateVars));
 });
 
 app.get("/urls/new", (req, res) => {
+  if(!loggedInUser(req, res)) {
+    res.redirect("/login");
+    return;
+  }
   res.render("urls_new", getSessionVars(req, res));
 });
 
 app.get("/urls/:id", (req, res) => {
+  if(!loggedInUser(req, res)) {
+    res.redirect("/login");
+    return;
+  }
   let longUrl = urlDatabase[req.params.id];
   if (longUrl) {
     res.render('urls_show', getSessionVars(req, res, {
@@ -117,6 +143,10 @@ app.get("/urls/:id", (req, res) => {
 
 // update
 app.post("/urls/:id", (req, res) => {
+  if(!loggedInUser(req, res)) {
+    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauto"});
+    return;
+  }
   let longUrl = req.body.longUrl;
   let shortUrl = req.params.id;
   if (shortUrl) {
@@ -128,6 +158,10 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  if(!loggedInUser(req, res)) {
+    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauto"});
+    return;
+  }
   let longUrl = urlDatabase[req.params.id];
   if (longUrl) {
     delete urlDatabase[req.params.id];
@@ -138,6 +172,10 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  if(!loggedInUser(req, res)) {
+    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauto"});
+    return;
+  }
   let longUrl = req.body.longUrl;
   let shortUrl = generateRandomString();
   urlDatabase[shortUrl] = longUrl;
