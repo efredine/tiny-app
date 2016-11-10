@@ -39,6 +39,10 @@ function get(model, id) {
   return data[model][id];
 }
 
+function deleteRecord(model, id) {
+  delete data[model][id];
+}
+
 function find(modelKey, field, value) {
   let model = data[modelKey];
   return Object.keys(model).find(id => {
@@ -62,5 +66,7 @@ module.exports = {
   insertUrl: insert.bind(null, 'urls'),
   getUrlForId: get.bind(null, 'urls'),
   findUrlId: find.bind(null, 'urls'),
-  updateUrlForId: update.bind(null, 'urls')
+  updateUrlForId: update.bind(null, 'urls'),
+  deleteUrlForId: deleteRecord.bind(null, 'urls'),
+  urlsForUser: urlsForUser
 };

@@ -16,11 +16,6 @@ const defaultNotFound = {
   detailedMessage: "Couldn't find that URL."
 };
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-
 function loggedInUser(req, res) {
   let userId = req.cookies.userId;
   let userRecord = models.getUserForId(userId);
@@ -47,10 +42,6 @@ function getSessionVars(req, res, existingVars = {}) {
   let userRecord = models.getUserForId(userId);
   let userName = userRecord ? userRecord.email : undefined;
   return Object.assign({userName: userName}, existingVars);
-}
-
-function generateRandomString() {
-  return Math.random().toString(36).substring(2, 8);
 }
 
 function handle400Error(req, res, overrides = {}) {
@@ -99,7 +90,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   if(!loggedInUser(req, res)) {
-    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauto"});
+    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
     return;
   }
   res.clearCookie("userId");
@@ -107,11 +98,13 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  if(!loggedInUser(req, res)) {
+  let userRecord = loggedInUser(req, res);
+  if(!userRecord) {
     res.redirect("/login");
     return;
   }
-  let templateVars = {baseUrl: BASE_URL, urls: urlDatabase};
+  let userUrls = models.urlsForUser(userRecord.id);
+  let templateVars = {baseUrl: BASE_URL, urls: userUrls};
   res.render('urls_index', getSessionVars(req, res, templateVars));
 });
 
@@ -123,17 +116,23 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", getSessionVars(req, res));
 });
 
+// read url
 app.get("/urls/:id", (req, res) => {
-  if(!loggedInUser(req, res)) {
+  let userRecord = loggedInUser(req, res);
+  if(!userRecord) {
     res.redirect("/login");
     return;
   }
-  let longUrl = urlDatabase[req.params.id];
-  if (longUrl) {
+  let urlRecord = models.getUrlForId(req.params.id);
+  if (urlRecord) {
+    if(urlRecord.userId !== userRecord.id) {
+      handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+      return;
+    }
     res.render('urls_show', getSessionVars(req, res, {
       shortUrl: req.params.id,
       baseUrl: BASE_URL,
-      longUrl: longUrl,
+      longUrl: urlRecord.longUrl,
       edit: req.query.edit
     }));
   } else {
@@ -141,47 +140,62 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
-// update
+// update url
 app.post("/urls/:id", (req, res) => {
-  if(!loggedInUser(req, res)) {
-    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauto"});
+  let userRecord = loggedInUser(req, res);
+  if(!userRecord) {
+    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
     return;
   }
-  let longUrl = req.body.longUrl;
-  let shortUrl = req.params.id;
-  if (shortUrl) {
-    urlDatabase[shortUrl] = longUrl;
+  let urlRecord = models.getUrlForId(req.params.id);
+  if (urlRecord) {
+    if(urlRecord.userId !== userRecord.id) {
+      handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+      return;
+    }
+    urlRecord.longUrl = req.body.longUrl;
+    models.updateUrlForId(urlRecord.id, urlRecord);
     res.redirect('/urls');
   } else {
     handle400Error(req, res);
   }
 });
 
+// delete url
 app.post("/urls/:id/delete", (req, res) => {
-  if(!loggedInUser(req, res)) {
-    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauto"});
+  let userRecord = loggedInUser(req, res);
+  if(!userRecord) {
+    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
     return;
   }
-  let longUrl = urlDatabase[req.params.id];
-  if (longUrl) {
-    delete urlDatabase[req.params.id];
+  let urlRecord = models.getUrlForId(req.params.id);
+  if (urlRecord) {
+    if(urlRecord.userId !== userRecord.id) {
+      handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+      return;
+    }
+    models.deleteUrlForId(urlRecord.id);
     res.redirect('/urls');
   } else {
     handle400Error(req, res);
   }
 });
 
+// create url
 app.post("/urls", (req, res) => {
-  if(!loggedInUser(req, res)) {
-    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauto"});
+  let userRecord = loggedInUser(req, res);
+  if(!userRecord) {
+    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
     return;
   }
-  let longUrl = req.body.longUrl;
-  let shortUrl = generateRandomString();
-  urlDatabase[shortUrl] = longUrl;
+  let shortUrl = models.insertUrl({
+    longUrl: req.body.longUrl,
+    userId: userRecord.id
+  });
   res.redirect("/urls/" + shortUrl);
 });
 
+// redirection
 app.get("/u/:shortUrl", (req, res) => {
   let longUrl = urlDatabase[req.params.shortUrl];
   if (longUrl) {

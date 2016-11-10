@@ -14,13 +14,13 @@
       <th></th>
       <th></th>
     </tr>
-    <% Object.keys(urls).forEach(shortUrl => { %>
+    <% urls.forEach(url => { %>
       <tr class="table">
-        <td><a href="/urls/<%= shortUrl %>"><%= baseUrl + shortUrl %></a></td>
-        <td><a href="/urls/<%= shortUrl %>"><%= urls[shortUrl] %></a></td>
-        <td><a class="btn btn-primary btn-xs" href="/urls/<%= shortUrl %>?edit=true">Edit</a></td>
+        <td><a href="/urls/<%= url.id %>"><%= baseUrl + url.id %></a></td>
+        <td><a href="/urls/<%= url.id %>"><%= url.longUrl %></a></td>
+        <td><a class="btn btn-primary btn-xs" href="/urls/<%= url.id %>?edit=true">Edit</a></td>
         <td>
-          <form method="POST" action="/urls/<%= shortUrl %>/delete" >
+          <form method="POST" action="/urls/<%= url.id %>/delete" >
             <input class="btn btn-danger btn-xs" type='submit' value='Delete'>
           </form>
         </td>
