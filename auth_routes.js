@@ -25,7 +25,7 @@ module.exports = function(app) {
   }
 
   app.get("/register", (req, res) =>{
-    res.render('auth', getSessionVars(req, res, {postUrl: '/register', buttonLabel: 'Register'}));
+    res.render('register', getSessionVars(req, res, {}));
   });
 
   app.post("/register", (req, res) =>{
@@ -39,7 +39,7 @@ module.exports = function(app) {
   });
 
   app.get("/login", (req, res) =>{
-    res.render('auth', getSessionVars(req, res, {postUrl: '/login', buttonLabel: "Log in"}));
+    res.render('login', getSessionVars(req, res, {}));
   });
 
   app.post("/login", (req, res) => {
