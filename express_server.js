@@ -19,6 +19,50 @@ const defaultNotFound = {
   detailedMessage: "Couldn't find that URL."
 };
 
+function getSessionVars(req, res, existingVars = {}) {
+  let userId = req.cookies.userId;
+  let userRecord = models.getUserForId(userId);
+  let userName = userRecord ? userRecord.email : undefined;
+  return Object.assign({userName: userName}, existingVars);
+}
+
+function renderUnauthorized(req, res, templateVars) {
+  res.status(401);
+  res.render('not_found', Object.assign({
+    statusCode: 401,
+    statusMessage: "Unauthorized",
+    requestedUrl: req.url,
+    detailedMessage: "Access to that url not permitted."
+  }, templateVars));
+}
+
+function renderForbidden(req, res, templateVars) {
+  res.status(403);
+  res.render('not_found', Object.assign({
+    statusCode: 403,
+    statusMessage: "Forbidden",
+    requestedUrl: req.url,
+    detailedMessage: ""
+  }, templateVars));
+}
+
+function renderNotFound(req, res, templateVars) {
+  res.status(404);
+  res.render('not_found', Object.assign({
+    statusCode: 404,
+    statusMessage: "Not found",
+    requestedUrl: req.url,
+    detailedMessage: ""
+  }, templateVars));
+}
+
+function handle400Error(req, res, overrides = {}) {
+  let notFoundVars = Object.assign({}, defaultNotFound, overrides);
+  notFoundVars.requestedUrl = req.url;
+  res.status(notFoundVars.statusCode);
+  res.render('not_found', getSessionVars(req, res, notFoundVars));
+}
+
 function loggedInUser(req, res) {
   let userId = req.cookies.userId;
   let userRecord = models.getUserForId(userId);
@@ -38,20 +82,6 @@ function authenticate(req, res) {
   } else {
     return false;
   }
-}
-
-function getSessionVars(req, res, existingVars = {}) {
-  let userId = req.cookies.userId;
-  let userRecord = models.getUserForId(userId);
-  let userName = userRecord ? userRecord.email : undefined;
-  return Object.assign({userName: userName}, existingVars);
-}
-
-function handle400Error(req, res, overrides = {}) {
-  let notFoundVars = Object.assign({}, defaultNotFound, overrides);
-  notFoundVars.requestedUrl = req.url;
-  res.status(notFoundVars.statusCode);
-  res.render('not_found', getSessionVars(req, res, notFoundVars));
 }
 
 app.get("/", (req, res) => {
@@ -83,17 +113,13 @@ app.post("/login", (req, res) => {
   if(authenticate(req, res)) {
     res.redirect("/");
   } else {
-    handle400Error(req, res, {
-      statusCode: 403,
-      statusMessage: "Forbidden",
-      detailedMessage: "User name or password incorrect."
-    });
+    renderForbidden(req, res, getSessionVars(req, res));
   }
 });
 
 app.post("/logout", (req, res) => {
   if(!loggedInUser(req, res)) {
-    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+    renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
   res.clearCookie("userId");
@@ -129,7 +155,7 @@ app.get("/urls/:id", (req, res) => {
   let urlRecord = models.getUrlForId(req.params.id);
   if (urlRecord) {
     if(urlRecord.userId !== userRecord.id) {
-      handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+      renderForbidden(req, res, getSessionVars(req, res));
       return;
     }
     res.render('urls_show', getSessionVars(req, res, {
@@ -139,7 +165,7 @@ app.get("/urls/:id", (req, res) => {
       edit: req.query.edit
     }));
   } else {
-    handle400Error(req, res);
+    renderNotFound(req, res, getSessionVars(req, res));
   }
 });
 
@@ -147,20 +173,20 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   let userRecord = loggedInUser(req, res);
   if(!userRecord) {
-    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+    renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
   let urlRecord = models.getUrlForId(req.params.id);
   if (urlRecord) {
     if(urlRecord.userId !== userRecord.id) {
-      handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+      renderForbidden(req, res, getSessionVars(req, res));
       return;
     }
     urlRecord.longUrl = req.body.longUrl;
     models.updateUrlForId(urlRecord.id, urlRecord);
     res.redirect('/urls');
   } else {
-    handle400Error(req, res);
+    renderNotFound(req, res, getSessionVars(req, res));
   }
 });
 
@@ -168,19 +194,19 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   let userRecord = loggedInUser(req, res);
   if(!userRecord) {
-    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+    renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
   let urlRecord = models.getUrlForId(req.params.id);
   if (urlRecord) {
     if(urlRecord.userId !== userRecord.id) {
-      handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+      renderForbidden(req, res, getSessionVars(req, res));
       return;
     }
     models.deleteUrlForId(urlRecord.id);
     res.redirect('/urls');
   } else {
-    handle400Error(req, res);
+    renderNotFound(req, res, getSessionVars(req, res));
   }
 });
 
@@ -188,7 +214,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls", (req, res) => {
   let userRecord = loggedInUser(req, res);
   if(!userRecord) {
-    handle400Error(req, res, {statusCode: 401, statusMessage: "Unauthorized"});
+    renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
   let shortUrl = models.insertUrl({
@@ -204,7 +230,7 @@ app.get("/u/:shortUrl", (req, res) => {
   if (urlRecord && urlRecord.longUrl) {
     res.redirect(urlRecord.longUrl);
   } else {
-    handle400Error(req, res);
+    renderNotFound(req, res, getSessionVars(req, res));
   }
 });
 
