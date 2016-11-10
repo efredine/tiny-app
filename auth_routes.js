@@ -24,11 +24,24 @@ module.exports = function(app) {
     }
   }
 
+  function verify(email, password) {
+    if(email && password) {
+      return "";
+    } else {
+      return "Email and password can't be empty.";
+    }
+  }
+
   app.get("/register", (req, res) =>{
-    res.render('register', getSessionVars(req, res, {}));
+    res.render('register', getSessionVars(req, res, {errorMessage: ""}));
   });
 
   app.post("/register", (req, res) =>{
+    let errorMessage = verify(req.body.email, req.body.password);
+    if(errorMessage) {
+      res.render('register', getSessionVars(req, res, {errorMessage: errorMessage}));
+      return;
+    }
     let userId = models.insertUser({
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, saltRounds)
@@ -39,7 +52,7 @@ module.exports = function(app) {
   });
 
   app.get("/login", (req, res) =>{
-    res.render('login', getSessionVars(req, res, {}));
+    res.render('login', getSessionVars(req, res, {errorMessage: ""}));
   });
 
   app.post("/login", (req, res) => {
