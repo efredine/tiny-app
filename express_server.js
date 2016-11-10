@@ -13,12 +13,6 @@ app.set("view engine", "ejs");
 
 const saltRounds = 10;
 
-const defaultNotFound = {
-  statusCode: 404,
-  statusMessage: "Not found",
-  detailedMessage: "Couldn't find that URL."
-};
-
 function getSessionVars(req, res, existingVars = {}) {
   let userId = req.cookies.userId;
   let userRecord = models.getUserForId(userId);
@@ -54,13 +48,6 @@ function renderNotFound(req, res, templateVars) {
     requestedUrl: req.url,
     detailedMessage: ""
   }, templateVars));
-}
-
-function handle400Error(req, res, overrides = {}) {
-  let notFoundVars = Object.assign({}, defaultNotFound, overrides);
-  notFoundVars.requestedUrl = req.url;
-  res.status(notFoundVars.statusCode);
-  res.render('not_found', getSessionVars(req, res, notFoundVars));
 }
 
 function loggedInUser(req, res) {
