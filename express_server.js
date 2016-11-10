@@ -5,10 +5,13 @@ const HOST = process.env.HOST || 'localhost';
 const BASE_URL =  `http://${HOST}:8080/u/`;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 const models = require('./models');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set("view engine", "ejs");
+
+const saltRounds = 10;
 
 const defaultNotFound = {
   statusCode: 404,
@@ -29,7 +32,7 @@ function authenticate(req, res) {
     return false;
   }
   let userRecord = models.getUserForId(userId);
-  if(userRecord.password === req.body.password) {
+  if(bcrypt.compareSync(req.body.password, userRecord.password)) {
     res.cookie("userId", userId);
     return true;
   } else {
@@ -66,7 +69,7 @@ app.get("/register", (req, res) =>{
 app.post("/register", (req, res) =>{
   let userId = models.insertUser({
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, saltRounds)
   });
   res.cookie("userId", userId);
   res.redirect("/");
