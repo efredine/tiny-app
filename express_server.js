@@ -116,6 +116,7 @@ app.post("/logout", (req, res) => {
   res.redirect("/");
 });
 
+// render list of urls for a logged in user
 app.get("/urls", (req, res) => {
   let userRecord = loggedInUser(req, res);
   if(!userRecord) {
@@ -127,6 +128,7 @@ app.get("/urls", (req, res) => {
   res.render('urls_index', getSessionVars(req, res, templateVars));
 });
 
+// render a page where the user can enter a new url
 app.get("/urls/new", (req, res) => {
   if(!loggedInUser(req, res)) {
     res.redirect("/login");
@@ -135,6 +137,19 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", getSessionVars(req, res));
 });
 
+// helper function that abstracts the pattern repeated in read, update and delete
+function forAuthorizedUrl(req, res, onSuccess) {
+  let urlRecord = models.getUrlForId(req.params.id);
+  if (urlRecord) {
+    if(urlRecord.userId === req.session.userRecord.id) {
+      onSuccess(urlRecord);
+    } else {
+      renderForbidden(req, res, getSessionVars(req, res));
+    }
+  } else {
+    renderNotFound(req, res, getSessionVars(req, res));
+  }
+}
 // read url
 app.get("/urls/:id", (req, res) => {
   let userRecord = loggedInUser(req, res);
@@ -142,21 +157,14 @@ app.get("/urls/:id", (req, res) => {
     res.redirect("/login");
     return;
   }
-  let urlRecord = models.getUrlForId(req.params.id);
-  if (urlRecord) {
-    if(urlRecord.userId !== userRecord.id) {
-      renderForbidden(req, res, getSessionVars(req, res));
-      return;
-    }
+  forAuthorizedUrl(req, res, urlRecord => {
     res.render('urls_show', getSessionVars(req, res, {
       shortUrl: req.params.id,
       baseUrl: BASE_URL,
       longUrl: urlRecord.longUrl,
       edit: req.query.edit
     }));
-  } else {
-    renderNotFound(req, res, getSessionVars(req, res));
-  }
+  });
 });
 
 // update url
@@ -166,18 +174,11 @@ app.post("/urls/:id", (req, res) => {
     renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
-  let urlRecord = models.getUrlForId(req.params.id);
-  if (urlRecord) {
-    if(urlRecord.userId !== userRecord.id) {
-      renderForbidden(req, res, getSessionVars(req, res));
-      return;
-    }
+  forAuthorizedUrl(req, res, urlRecord => {
     urlRecord.longUrl = req.body.longUrl;
     models.updateUrlForId(urlRecord.id, urlRecord);
     res.redirect('/urls');
-  } else {
-    renderNotFound(req, res, getSessionVars(req, res));
-  }
+  });
 });
 
 // delete url
@@ -187,17 +188,10 @@ app.post("/urls/:id/delete", (req, res) => {
     renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
-  let urlRecord = models.getUrlForId(req.params.id);
-  if (urlRecord) {
-    if(urlRecord.userId !== userRecord.id) {
-      renderForbidden(req, res, getSessionVars(req, res));
-      return;
-    }
+  forAuthorizedUrl(req, res, urlRecord => {
     models.deleteUrlForId(urlRecord.id);
     res.redirect('/urls');
-  } else {
-    renderNotFound(req, res, getSessionVars(req, res));
-  }
+  });
 });
 
 // create url
