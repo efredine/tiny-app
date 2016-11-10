@@ -118,12 +118,11 @@ app.post("/logout", (req, res) => {
 
 // render list of urls for a logged in user
 app.get("/urls", (req, res) => {
-  let userRecord = loggedInUser(req, res);
-  if(!userRecord) {
+  if(!loggedInUser(req, res)) {
     res.redirect("/login");
     return;
   }
-  let userUrls = models.urlsForUser(userRecord.id);
+  let userUrls = models.urlsForUser(req.session.userRecord.id);
   let templateVars = {baseUrl: BASE_URL, urls: userUrls};
   res.render('urls_index', getSessionVars(req, res, templateVars));
 });
@@ -152,8 +151,7 @@ function forAuthorizedUrl(req, res, onSuccess) {
 }
 // read url
 app.get("/urls/:id", (req, res) => {
-  let userRecord = loggedInUser(req, res);
-  if(!userRecord) {
+  if(!loggedInUser(req, res)) {
     res.redirect("/login");
     return;
   }
@@ -169,8 +167,7 @@ app.get("/urls/:id", (req, res) => {
 
 // update url
 app.post("/urls/:id", (req, res) => {
-  let userRecord = loggedInUser(req, res);
-  if(!userRecord) {
+  if(!loggedInUser(req, res)) {
     renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
@@ -183,8 +180,7 @@ app.post("/urls/:id", (req, res) => {
 
 // delete url
 app.post("/urls/:id/delete", (req, res) => {
-  let userRecord = loggedInUser(req, res);
-  if(!userRecord) {
+  if(!loggedInUser(req, res)) {
     renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
@@ -196,14 +192,13 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // create url
 app.post("/urls", (req, res) => {
-  let userRecord = loggedInUser(req, res);
-  if(!userRecord) {
+  if(!loggedInUser(req, res)) {
     renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
   let shortUrl = models.insertUrl({
     longUrl: req.body.longUrl,
-    userId: userRecord.id
+    userId: req.session.userRecord.id
   });
   res.redirect("/urls/" + shortUrl);
 });
