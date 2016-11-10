@@ -2,20 +2,24 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || 'localhost';
+const SESSION_KEY_1 = process.env.SESSION_KEY_1 || 'SESSION_KEY_1';
+const SESSION_KEY_2 = process.env.SESSION_KEY_2 || 'SESSION_KEY_2';
 const BASE_URL =  `http://${HOST}:8080/u/`;
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const models = require('./models');
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: [SESSION_KEY_1, SESSION_KEY_2]
+}));
 app.set("view engine", "ejs");
 
 const saltRounds = 10;
 
 function getSessionVars(req, res, existingVars = {}) {
-  let userId = req.cookies.userId;
-  let userRecord = models.getUserForId(userId);
+  let userRecord = req.session.userRecord;
   let userName = userRecord ? userRecord.email : undefined;
   return Object.assign({userName: userName}, existingVars);
 }
@@ -51,9 +55,7 @@ function renderNotFound(req, res, templateVars) {
 }
 
 function loggedInUser(req, res) {
-  let userId = req.cookies.userId;
-  let userRecord = models.getUserForId(userId);
-  return userRecord;
+  return req.session.userRecord;
 }
 
 function authenticate(req, res) {
@@ -64,7 +66,7 @@ function authenticate(req, res) {
   }
   let userRecord = models.getUserForId(userId);
   if(bcrypt.compareSync(req.body.password, userRecord.password)) {
-    res.cookie("userId", userId);
+    req.session.userRecord = userRecord;
     return true;
   } else {
     return false;
@@ -88,7 +90,8 @@ app.post("/register", (req, res) =>{
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, saltRounds)
   });
-  res.cookie("userId", userId);
+  let userRecord = models.getUserForId(userId);
+  req.session.userRecord = userRecord;
   res.redirect("/");
 });
 
@@ -109,7 +112,7 @@ app.post("/logout", (req, res) => {
     renderUnauthorized(req, res, getSessionVars(req, res));
     return;
   }
-  res.clearCookie("userId");
+  req.session = null;
   res.redirect("/");
 });
 
