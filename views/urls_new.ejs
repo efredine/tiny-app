@@ -11,6 +11,9 @@
           <label for="longURL">Enter a URL to shorten:</label>
           <input class="form-control" id="longUrl" type="text" name="longUrl" placeholder="http://">
         </div>
+        <% if(errorMessage) { %>
+          <p class="error"><%= errorMessage %></p>
+        <% } %>
         <div class="form-group">
           <input class="btn btn-success btn-block" type="submit" value="Shorten">
         </div>

@@ -1,4 +1,5 @@
 const models = require('./models');
+const validUrl = require('valid-url');
 require('./render_helpers')();
 
 /**
@@ -29,7 +30,7 @@ module.exports = function(app, host, port) {
       res.redirect("/login");
       return;
     }
-    res.render("urls_new", getSessionVars(req, res));
+    res.render("urls_new", getSessionVars(req, res, {errorMessage: ""}));
   });
 
   // helper function that abstracts the pattern repeated in read, update and delete
@@ -86,17 +87,33 @@ module.exports = function(app, host, port) {
     });
   });
 
+/**
+ * Returns a validated url or undefined.
+ * @param  {string}
+ * @return {string}
+ */
+  function checkUrl(url) {
+    let validatedUrl = validUrl.isUri(url);
+    return validatedUrl;
+  }
+
   // create url
   app.post("/urls", (req, res) => {
     if(!loggedInUser(req, res)) {
       renderUnauthorized(req, res, getSessionVars(req, res));
       return;
     }
-    let shortUrl = models.insertUrl({
-      longUrl: req.body.longUrl,
-      userId: req.session.userRecord.id
-    });
-    res.redirect("/urls/" + shortUrl);
+    let longUrl = req.body.longUrl;
+    let validatedUrl = checkUrl(req.body.longUrl);
+    if(validatedUrl) {
+      let shortUrl = models.insertUrl({
+        longUrl: validatedUrl,
+        userId: req.session.userRecord.id
+      });
+      res.redirect("/urls/" + shortUrl);
+    } else {
+      res.render("urls_new", getSessionVars(req, res, {errorMessage: `${longUrl} is not a valid URL`}));
+    }
   });
 
   // redirection
