@@ -71,7 +71,12 @@ module.exports = function(app, host, port) {
     }
   });
 
-  // read url
+  /**
+   * Read a URL.  This url accepts an optional query parameter &edit which is used as the value
+   * of an edit boolean passed to the template.  The template renders a read-only version of the
+   * viefw if edit is false or an editable version if edit is true.  The editable version of the
+   * form posts to the update url.
+   */
   app.get("/urls/:id", blockUnauthorized, (req, res) => {
     forAuthorizedUrl(req, res, urlRecord => {
       const templateVars = Object.assign({
