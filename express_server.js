@@ -10,7 +10,7 @@ const models = require('./models');
 const authRoutes = require('./auth_routes');
 const urlRoutes = require('./url_routes');
 const tracking = require('./tracking');
-require('./render_helpers')();
+require('./auth_helpers')();
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));

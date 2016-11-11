@@ -1,6 +1,6 @@
 const models = require('./models');
 const validUrl = require('valid-url');
-require('./render_helpers')();
+require('./auth_helpers')();
 
 function summaryStats(urlRecord) {
   const clicks = urlRecord.clicks;

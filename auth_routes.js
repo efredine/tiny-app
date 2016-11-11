@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const models = require('./models');
-require('./render_helpers')();
+require('./auth_helpers')();
 const saltRounds = 10;
 
 /**

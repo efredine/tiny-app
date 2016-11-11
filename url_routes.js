@@ -1,7 +1,7 @@
 const models = require('./models');
 const tracking = require('./tracking');
 const validUrl = require('valid-url');
-require('./render_helpers')();
+require('./auth_helpers')();
 
 /**
  * Define routes for processing urls.
