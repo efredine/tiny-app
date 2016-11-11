@@ -122,9 +122,9 @@ module.exports = function(app) {
       if(result) {
         res.redirect("/");
 
-      // If uathentication fails, render an error (that's what the spec says!).
+      // If authentication fails, re-render the form and return an error message.
       } else {
-        renderForbidden(req, res);
+        res.status(401).render('login', {errorMessage: "User name or password incorrect."});
       }
     });
   });

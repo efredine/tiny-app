@@ -20,6 +20,9 @@
           <input class="btn btn-primary btn-block" type="submit" value="Log in">
         </div>
       </form>
+      <% if(errorMessage) { %>
+        <p class="error"><%= errorMessage %></p>
+      <% } %>
       <p>Not registered?  <a href="/register">Registration</a></p>
     </div>
   </div>
