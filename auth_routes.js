@@ -9,22 +9,23 @@ const saltRounds = 10;
  */
 module.exports = function(app) {
 
-  function authenticate(req, res) {
+  function authenticate(req, res, onResult) {
     let email = req.body.email;
     let userId = models.findUserId("email", email);
     if(!userId) {
-      return false;
+      onResult(null, false);
+      return;
     }
     let userRecord = models.getUserForId(userId);
-    if(bcrypt.compareSync(req.body.password, userRecord.password)) {
-      req.session.userRecord = {email: userRecord.email, id: userRecord.id};
-      return true;
-    } else {
-      return false;
-    }
+    bcrypt.compare(req.body.password, userRecord.password, (err, result) =>{
+      if(result) {
+        req.session.userRecord = {email: userRecord.email, id: userRecord.id};
+      }
+      onResult(err, result);
+    });
   }
 
-  function verify(email, password) {
+  function checkIfValid(email, password) {
     if(email && password) {
       return "";
     } else {
@@ -37,18 +38,20 @@ module.exports = function(app) {
   });
 
   app.post("/register", (req, res) =>{
-    let errorMessage = verify(req.body.email, req.body.password);
+    let errorMessage = checkIfValid(req.body.email, req.body.password);
     if(errorMessage) {
       res.render('register', getSessionVars(req, res, {errorMessage: errorMessage}));
       return;
     }
-    let userId = models.insertUser({
-      email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, saltRounds)
+    bcrypt.hash(req.body.password, saltRounds, (err, hashedPassword) => {
+      let userId = models.insertUser({
+        email: req.body.email,
+        password: hashedPassword
+      });
+      let userRecord = models.getUserForId(userId);
+      req.session.userRecord = {email: userRecord.email, id: userRecord.id};
+      res.redirect("/");
     });
-    let userRecord = models.getUserForId(userId);
-    req.session.userRecord = userRecord;
-    res.redirect("/");
   });
 
   app.get("/login", (req, res) =>{
@@ -56,11 +59,13 @@ module.exports = function(app) {
   });
 
   app.post("/login", (req, res) => {
-    if(authenticate(req, res)) {
-      res.redirect("/");
-    } else {
-      renderForbidden(req, res, getSessionVars(req, res));
-    }
+    authenticate(req, res, (err, result) => {
+      if(result) {
+        res.redirect("/");
+      } else {
+        renderForbidden(req, res, getSessionVars(req, res));
+      }
+    });
   });
 
   app.post("/logout", (req, res) => {
