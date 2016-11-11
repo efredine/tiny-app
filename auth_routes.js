@@ -76,6 +76,14 @@ module.exports = function(app) {
     });
   });
 
+  app.get("/logout", (req, res) => {
+    if(loggedInUser(req, res)) {
+      res.redirect("/");
+    } else {
+      renderUnauthorized(req, res, getSessionVars(req, res));
+    }
+  });
+
   app.post("/logout", (req, res) => {
     if(!loggedInUser(req, res)) {
       renderUnauthorized(req, res, getSessionVars(req, res));
