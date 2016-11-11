@@ -9,6 +9,7 @@ const cookieSession = require('cookie-session');
 const models = require('./models');
 const authRoutes = require('./auth_routes');
 const urlRoutes = require('./url_routes');
+const tracking = require('./tracking');
 require('./render_helpers')();
 
 app.use(express.static('public'));
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 
 authRoutes(app);
 urlRoutes(app, HOST, PORT);
+tracking.routes(app);
 
 // Catch any requests not caught be defined routes.
 app.all("*", (req, res) => {

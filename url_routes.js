@@ -129,13 +129,4 @@ module.exports = function(app, host, port) {
     });
   });
 
-  // redirection
-  app.get("/u/:shortUrl", (req, res) => {
-    let urlRecord = models.getUrlForId(req.params.shortUrl);
-    if (urlRecord && urlRecord.longUrl) {
-      res.redirect(urlRecord.longUrl);
-    } else {
-      renderNotFound(req, res, getSessionVars(req, res));
-    }
-  });
 };
