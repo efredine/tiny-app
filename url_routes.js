@@ -1,4 +1,5 @@
 const models = require('./models');
+const tracking = require('./tracking');
 const validUrl = require('valid-url');
 require('./render_helpers')();
 
@@ -82,13 +83,14 @@ module.exports = function(app, host, port) {
       return;
     }
     forAuthorizedUrl(req, res, urlRecord => {
-      res.render('urls_show', getSessionVars(req, res, {
+      const templateVars = Object.assign({
         shortUrl: req.params.id,
         baseUrl: BASE_URL,
         longUrl: urlRecord.longUrl,
         edit: req.query.edit,
         errorMessage: ""
-      }));
+      }, tracking.summaryStats(urlRecord));
+      res.render('urls_show', getSessionVars(req, res, templateVars));
     });
   });
 

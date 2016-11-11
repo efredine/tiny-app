@@ -30,6 +30,8 @@
             <a class="btn btn-default btn-block" href="/urls">Cancel</a>
           </form>
         <% } else { %>
+          <p>Clicks: <%= clickCount %></p>
+          <p>Unique Visitors: <%= uniques %></p>
           <a class="btn btn-primary btn-block" href="/urls/<%= shortUrl %>?edit=true">Edit</a>
           <a class="btn btn-default btn-block" href="/urls">Done</a>
         <% } %>
