@@ -79,11 +79,18 @@ module.exports = function(app, host, port) {
    */
   app.get("/urls/:id", blockUnauthorized, (req, res) => {
     forAuthorizedUrl(req, res, urlRecord => {
-      const templateVars = Object.assign({
+      const edit = req.query.edit;
+      let templateVars = Object.assign({
         baseUrl: BASE_URL,
-        edit: req.query.edit,
+        edit: edit,
         errorMessage: ""
-      }, urlRecord, tracking.summaryStats(urlRecord));
+      }, urlRecord);
+      if(!edit) {
+        templateVars = Object.assign(templateVars,
+          tracking.summaryStats(urlRecord),
+          {eventDetails: tracking.clickDetails(urlRecord)}
+        );
+      }
       res.render('urls_show', templateVars);
     });
   });

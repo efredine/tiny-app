@@ -30,7 +30,17 @@ function summaryStats(urlRecord) {
 }
 
 function clickDetails(urlRecord) {
-//
+  const clicks = urlRecord.clicks;
+  if(clicks && clicks.length) {
+    const groups = eventsByTrackingId(clicks);
+    return Object.keys(groups)
+    .map(groupKey => {
+      const userAgent = groups[groupKey][0].headers['user-agent'];
+      return {trackingId: groupKey, userAgent: userAgent, events: groups[groupKey]};
+    });
+  } else {
+    return [];
+  }
 }
 /**
  * Records a click record for the URL.  Click records are kept in an array.
@@ -53,9 +63,9 @@ function track(req, urlRecord) {
 
   let trackingId = req.session.trackingId;
 
-  // If this session doesn't have a tracking Id, craete a new one and store it in the session.
+  // If this session doesn't have a tracking Id, create a new one and store it in the session.
   if(!trackingId) {
-    let trackingId = models.insertUser({});
+    trackingId = models.insertUser({});
     req.session.trackingId = trackingId;
   }
 
@@ -78,3 +88,4 @@ exports.routes = function(app) {
 };
 
 exports.summaryStats = summaryStats;
+exports.clickDetails = clickDetails;
