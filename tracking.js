@@ -47,7 +47,7 @@ exports.routes = function(app) {
       track(req, urlRecord);
       res.redirect(urlRecord.longUrl);
     } else {
-      renderNotFound(req, res, getSessionVars(req, res));
+      renderNotFound(req, res);
     }
   });
 };

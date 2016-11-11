@@ -23,8 +23,7 @@ module.exports = function(app, host, port) {
     let userUrls = models.urlsForUser(req.session.userRecord.id).map(urlRecord => {
       return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
     });
-    let templateVars = {baseUrl: BASE_URL, urls: userUrls};
-    res.render('urls_index', templateVars);
+    res.render('urls_index', {baseUrl: BASE_URL, urls: userUrls});
   });
 
   // render a page where the user can enter a new url
@@ -33,7 +32,7 @@ module.exports = function(app, host, port) {
       res.redirect("/login");
       return;
     }
-    res.render("urls_new", getSessionVars(req, res, {errorMessage: ""}));
+    res.render("urls_new", {errorMessage: ""});
   });
 
   // helper function that abstracts the pattern repeated in read, update and delete
@@ -43,10 +42,10 @@ module.exports = function(app, host, port) {
       if(urlRecord.userId === req.session.userRecord.id) {
         onSuccess(urlRecord);
       } else {
-        renderForbidden(req, res, getSessionVars(req, res));
+        renderForbidden(req, res);
       }
     } else {
-      renderNotFound(req, res, getSessionVars(req, res));
+      renderNotFound(req, res);
     }
   }
 /**
@@ -62,7 +61,7 @@ module.exports = function(app, host, port) {
   // create url
   app.post("/urls", (req, res) => {
     if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res, getSessionVars(req, res));
+      renderUnauthorized(req, res);
       return;
     }
     let longUrl = req.body.longUrl;
@@ -77,14 +76,14 @@ module.exports = function(app, host, port) {
       });
       res.redirect("/urls/" + shortUrl);
     } else {
-      res.render("urls_new", getSessionVars(req, res, {errorMessage: `${longUrl} is not a valid URL`}));
+      res.render("urls_new", {errorMessage: `${longUrl} is not a valid URL`});
     }
   });
 
   // read url
   app.get("/urls/:id", (req, res) => {
     if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res, getSessionVars(req, res));
+      renderUnauthorized(req, res);
       return;
     }
     forAuthorizedUrl(req, res, urlRecord => {
@@ -93,14 +92,14 @@ module.exports = function(app, host, port) {
         edit: req.query.edit,
         errorMessage: ""
       }, urlRecord, tracking.summaryStats(urlRecord));
-      res.render('urls_show', getSessionVars(req, res, templateVars));
+      res.render('urls_show', templateVars);
     });
   });
 
   // update url
   app.post("/urls/:id", (req, res) => {
     if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res, getSessionVars(req, res));
+      renderUnauthorized(req, res);
       return;
     }
     forAuthorizedUrl(req, res, urlRecord => {
@@ -117,7 +116,7 @@ module.exports = function(app, host, port) {
           edit: true,
           errorMessage: `${longUrl} is not a valid URL`
         }, urlRecord, tracking.summaryStats(urlRecord));
-        res.render('urls_show', getSessionVars(req, res, templateVars));
+        res.render('urls_show', templateVars);
       }
     });
   });
@@ -125,7 +124,7 @@ module.exports = function(app, host, port) {
   // delete url
   app.post("/urls/:id/delete", (req, res) => {
     if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res, getSessionVars(req, res));
+      renderUnauthorized(req, res);
       return;
     }
     forAuthorizedUrl(req, res, urlRecord => {

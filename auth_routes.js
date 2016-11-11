@@ -14,8 +14,9 @@ module.exports = function(app) {
    * as userName so it is accessible from all templates.
    */
   app.use((req, res, next) => {
+    res.locals.userName = undefined;
     if(loggedInUser(req, res)) {
-      res.locals.userName = req.session.userRecord;
+      res.locals.userName = req.session.userRecord.email;
     }
     next();
   });
@@ -58,14 +59,14 @@ module.exports = function(app) {
     if(loggedInUser(req, res)){
       res.redirect("/");
     } else {
-      res.render('register', getSessionVars(req, res, {errorMessage: ""}));
+      res.render('register', {errorMessage: ""});
     }
   });
 
   app.post("/register", (req, res) =>{
     let errorMessage = checkIfValid(req.body.email, req.body.password);
     if(errorMessage) {
-      res.render('register', getSessionVars(req, res, {errorMessage: errorMessage}));
+      res.render('register', {errorMessage: errorMessage});
       return;
     }
     bcrypt.hash(req.body.password, saltRounds, (err, hashedPassword) => {
@@ -83,7 +84,7 @@ module.exports = function(app) {
     if(loggedInUser(req, res)) {
       res.redirect("/");
     } else {
-      res.render('login', getSessionVars(req, res, {errorMessage: ""}));
+      res.render('login', {errorMessage: ""});
     }
   });
 
@@ -92,7 +93,7 @@ module.exports = function(app) {
       if(result) {
         res.redirect("/");
       } else {
-        renderForbidden(req, res, getSessionVars(req, res));
+        renderForbidden(req, res);
       }
     });
   });
@@ -101,13 +102,13 @@ module.exports = function(app) {
     if(loggedInUser(req, res)) {
       res.redirect("/");
     } else {
-      renderUnauthorized(req, res, getSessionVars(req, res));
+      renderUnauthorized(req, res);
     }
   });
 
   app.post("/logout", (req, res) => {
     if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res, getSessionVars(req, res));
+      renderUnauthorized(req, res);
       return;
     }
     req.session = null;

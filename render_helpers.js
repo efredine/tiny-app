@@ -4,13 +4,8 @@
  * @return {undefined}
  */
 module.exports = function() {
-  this.getSessionVars = function getSessionVars(req, res, existingVars = {}) {
-    let userRecord = req.session.userRecord;
-    let userName = userRecord ? userRecord.email : undefined;
-    return Object.assign({userName: userName}, existingVars);
-  };
 
-  this.renderUnauthorized = function renderUnauthorized(req, res, templateVars) {
+  this.renderUnauthorized = function renderUnauthorized(req, res, templateVars = {}) {
     res.status(401);
     res.render('not_found', Object.assign({
       statusCode: 401,
@@ -20,7 +15,7 @@ module.exports = function() {
     }, templateVars));
   };
 
-  this.renderForbidden = function renderForbidden(req, res, templateVars) {
+  this.renderForbidden = function renderForbidden(req, res, templateVars = {}) {
     res.status(403);
     res.render('not_found', Object.assign({
       statusCode: 403,
@@ -30,7 +25,7 @@ module.exports = function() {
     }, templateVars));
   };
 
-  this.renderNotFound = function renderNotFound(req, res, templateVars) {
+  this.renderNotFound = function renderNotFound(req, res, templateVars = {}) {
     res.status(404);
     res.render('not_found', Object.assign({
       statusCode: 404,

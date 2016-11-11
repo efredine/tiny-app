@@ -34,7 +34,7 @@ tracking.routes(app);
 
 // Catch any requests not caught be defined routes.
 app.all("*", (req, res) => {
-  renderNotFound(req, res, getSessionVars(req, res));
+  renderNotFound(req, res);
 });
 
 app.listen(PORT, () => {
