@@ -1,6 +1,6 @@
 // Returns the user record for a logged in user.  This will be undefined if the user is not logged in.
 function loggedInUser(req, res) {
-  return req.session.userRecord;
+  return req.session ? req.session.userRecord : undefined;
 }
 
 /**

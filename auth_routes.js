@@ -14,10 +14,28 @@ module.exports = function(app) {
    * as userName so it is accessible from all templates.
    */
   app.use((req, res, next) => {
+
+    // username has to exist as a variable or template rendering fails
     res.locals.userName = undefined;
+
+    // if user is logged in, get the value for userName
     if(loggedInUser(req, res)) {
-      res.locals.userName = req.session.userRecord.email;
+
+      // a user record exists in the session, make sure it's still in the database.
+      let sessionUserRecord = req.session.userRecord;
+      let userRecord = models.getUserForId(sessionUserRecord.id);
+
+      // found it in the database, so use it
+      if(userRecord) {
+        res.locals.userName = userRecord.email;
+
+      // not in the database, clear the session
+      } else {
+        req.session = null;
+      }
     }
+
+    // carry on with route processing
     next();
   });
 
