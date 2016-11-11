@@ -34,13 +34,17 @@
             <a class="btn btn-default btn-block" href="/urls">Cancel</a>
           </form>
         <% } else { %>
-          <p>Clicks: <%= clickCount %>
-          <br> Unique Visitors: <%= uniques %></p>
           <a class="btn btn-primary btn-block" href="/urls/<%= id %>?edit=true">Edit</a>
           <a class="btn btn-default btn-block" href="/urls">Done</a>
         <% } %>
       </div>
     </div>
+    <% if(!edit) { %>
+      <div class="row">
+        <div class="col-xs-6"><h3>Total Visits: <%= clickCount %></h3></div>
+        <div class="col-xs-6"><h3>Unique Visitors: <%= uniques %></h3></div>
+      </div>
+    <% } %>
   </div>
 </body>
 </html>
