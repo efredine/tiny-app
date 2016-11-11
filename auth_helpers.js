@@ -1,3 +1,4 @@
+// Returns the user record for a logged in user.  This will be undefined if the user is not logged in.
 function loggedInUser(req, res) {
   return req.session.userRecord;
 }
@@ -9,6 +10,11 @@ function loggedInUser(req, res) {
  */
 module.exports = function() {
 
+  /**
+   * Used in route definitions to render an unauthorized page if the user is not logged in.
+   * If the user is logged in, it passes processing on to the route.  Example usage:
+   * app.post("/urls", blockUnauthorized, (req, res) => {// processing for logged in user}
+   */
   this.blockUnauthorized = function blockUnauthorized(req, res, next) {
     if(loggedInUser(req, res)) {
       next();
@@ -17,6 +23,13 @@ module.exports = function() {
     }
   };
 
+  /**
+   * Used in route definitions to redirect the user to the specified URL if the user is not logged in.
+   * If the user is logged in, passes processing on to the route.  Example usage:
+   * app.get("/urls", redirectUnathorized("/login"), (req, res) => {// processing for logged in user}
+   * @param  {String} redirectUrl to use
+   * @return {Function} A middleware function.
+   */
   this.redirectUnathorized = function renderUnauthorized(redirectUrl) {
     return function(req, res, next) {
       if(loggedInUser(req, res)) {
@@ -27,6 +40,7 @@ module.exports = function() {
     };
   };
 
+  // Render error as a 401 page.
   this.renderUnauthorized = function renderUnauthorized(req, res, templateVars = {}) {
     res.status(401);
     res.render('not_found', Object.assign({
@@ -37,6 +51,7 @@ module.exports = function() {
     }, templateVars));
   };
 
+  // Render error as a 403 page.
   this.renderForbidden = function renderForbidden(req, res, templateVars = {}) {
     res.status(403);
     res.render('not_found', Object.assign({
@@ -47,6 +62,7 @@ module.exports = function() {
     }, templateVars));
   };
 
+  // Render error as a 404 page.
   this.renderNotFound = function renderNotFound(req, res, templateVars = {}) {
     res.status(404);
     res.render('not_found', Object.assign({
