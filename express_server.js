@@ -12,6 +12,7 @@ const urlRoutes = require('./url_routes');
 const tracking = require('./tracking');
 require('./auth_helpers')();
 
+// middleware configuration
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
@@ -20,19 +21,24 @@ app.use(cookieSession({
 }));
 app.set("view engine", "ejs");
 
+// routes
+
+// Logged in users are redirected to their URLS, users who aren't logged in are redicted to the login page.
 app.get("/", redirectUnathorized("/login"), (req, res) => {
   res.redirect("/urls");
 });
 
+// Configure routes for other modules.
 authRoutes(app);
 urlRoutes(app, HOST, PORT);
 tracking.routes(app);
 
-// Catch any requests not caught be defined routes.
+// Catch any requests not caught by defined routes.
 app.all("*", (req, res) => {
   renderNotFound(req, res);
 });
 
+// Fire it up!
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
