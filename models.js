@@ -11,12 +11,16 @@ const data = {
     "b2xVn2": {
       userId: "666XXX",
       id: "b2xVn2",
-      longUrl: "http://www.lighthouselabs.ca"
+      longUrl: "http://www.lighthouselabs.ca",
+      created: new Date(),
+      lastUpdated: new Date()
     },
     "9sm5xK": {
       userId: "666XXX",
       id: "9sm5xK",
-      longUrl: "http://www.google.com"
+      longUrl: "http://www.google.com",
+      created: new Date(),
+      lastUpdated: new Date()
     }
   }
 };

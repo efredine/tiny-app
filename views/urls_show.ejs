@@ -8,9 +8,13 @@
     <%- include('partials/_header') %>
     <div class="row">
       <div class="col-xs-12">
-        <h1><a href="/urls">My Links:</a> <%= shortUrl %></h1>
-        <p><a href="<%= baseUrl + shortUrl %>"><%= baseUrl + shortUrl %></a></p>
-        <form action="/urls/<%= shortUrl %>" method="POST">
+        <h1><a href="/urls">My Links:</a> <%= id %></h1>
+        <p><a href="<%= baseUrl + id %>"><%= baseUrl + id %></a>
+          <br>Created: <%= created.toLocaleDateString('en-US', {timeZone: "America/Vancouver"}) %>
+            <%= created.toLocaleTimeString('en-US', {timeZone: "America/Vancouver"}) %>
+          <br>Last updated: <%= lastUpdated.toLocaleDateString('en-US', {timeZone: "America/Vancouver"})%>
+            <%= lastUpdated.toLocaleTimeString('en-US', {timeZone: "America/Vancouver"}) %></p>
+        <form action="/urls/<%= id %>" method="POST">
           <div class="form-group">
             <label for="longUrl">Long URL:</label>
             <input class="form-control" id="longUrl" type="text" name="longUrl" value="<%= longUrl %>" <%= edit ? "" : "disabled"%>>
@@ -25,14 +29,14 @@
           <% } %>
         </form>
         <% if(edit) { %>
-          <form method="POST" action="/urls/<%= shortUrl %>/delete" >
+          <form method="POST" action="/urls/<%= id %>/delete" >
             <input class="btn btn-danger btn-block" type='submit' value='Delete'>
             <a class="btn btn-default btn-block" href="/urls">Cancel</a>
           </form>
         <% } else { %>
-          <p>Clicks: <%= clickCount %></p>
-          <p>Unique Visitors: <%= uniques %></p>
-          <a class="btn btn-primary btn-block" href="/urls/<%= shortUrl %>?edit=true">Edit</a>
+          <p>Clicks: <%= clickCount %>
+          <br> Unique Visitors: <%= uniques %></p>
+          <a class="btn btn-primary btn-block" href="/urls/<%= id %>?edit=true">Edit</a>
           <a class="btn btn-default btn-block" href="/urls">Done</a>
         <% } %>
       </div>

@@ -68,9 +68,12 @@ module.exports = function(app, host, port) {
     let longUrl = req.body.longUrl;
     let validatedUrl = checkUrl(req.body.longUrl);
     if(validatedUrl) {
+      const now = new Date();
       let shortUrl = models.insertUrl({
         longUrl: validatedUrl,
-        userId: req.session.userRecord.id
+        userId: req.session.userRecord.id,
+        created: now,
+        lastUpdated: now
       });
       res.redirect("/urls/" + shortUrl);
     } else {
@@ -86,12 +89,10 @@ module.exports = function(app, host, port) {
     }
     forAuthorizedUrl(req, res, urlRecord => {
       const templateVars = Object.assign({
-        shortUrl: req.params.id,
         baseUrl: BASE_URL,
-        longUrl: urlRecord.longUrl,
         edit: req.query.edit,
         errorMessage: ""
-      }, tracking.summaryStats(urlRecord));
+      }, urlRecord, tracking.summaryStats(urlRecord));
       res.render('urls_show', getSessionVars(req, res, templateVars));
     });
   });
@@ -107,16 +108,16 @@ module.exports = function(app, host, port) {
       let validatedUrl = checkUrl(longUrl);
       if(validatedUrl) {
         urlRecord.longUrl = validatedUrl;
+        urlRecord.lastUpdated = new Date();
         models.updateUrlForId(urlRecord.id, urlRecord);
         res.redirect('/urls');
       } else {
-        res.render('urls_show', getSessionVars(req, res, {
-          shortUrl: req.params.id,
+        const templateVars = Object.assign({
           baseUrl: BASE_URL,
-          longUrl: longUrl,
           edit: true,
           errorMessage: `${longUrl} is not a valid URL`
-        }));
+        }, urlRecord, tracking.summaryStats(urlRecord));
+        res.render('urls_show', getSessionVars(req, res, templateVars));
       }
     });
   });
