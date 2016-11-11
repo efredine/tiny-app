@@ -9,6 +9,17 @@ const saltRounds = 10;
  */
 module.exports = function(app) {
 
+  /**
+   * Simple middle-ware function that takes the email address from the session and puts it in res.local
+   * as userName so it is accessible from all templates.
+   */
+  app.use((req, res, next) => {
+    if(loggedInUser(req, res)) {
+      res.locals.userName = req.session.userRecord;
+    }
+    next();
+  });
+
   function authenticate(req, res, onResult) {
     let email = req.body.email;
     let userId = models.findUserId("email", email);

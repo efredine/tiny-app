@@ -24,7 +24,7 @@ module.exports = function(app, host, port) {
       return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
     });
     let templateVars = {baseUrl: BASE_URL, urls: userUrls};
-    res.render('urls_index', getSessionVars(req, res, templateVars));
+    res.render('urls_index', templateVars);
   });
 
   // render a page where the user can enter a new url
