@@ -24,10 +24,20 @@ module.exports = function(app) {
       onResult(err, result);
     });
   }
-
+  /**
+   * Email and password can't be blank and the email must not already be registered.
+   * @param  {String} email
+   * @param  {String} password
+   * @return {String} errorMessage
+   */
   function checkIfValid(email, password) {
     if(email && password) {
-      return "";
+      let userId = models.findUserId("email", email);
+      if(userId) {
+        return `${email} already in use.`;
+      } else{
+        return "";
+      }
     } else {
       return "Email and password can't be empty.";
     }
