@@ -1,9 +1,31 @@
+function loggedInUser(req, res) {
+  return req.session.userRecord;
+}
+
 /**
  * Exports helper functions into the importing module's namespace.
  *
  * @return {undefined}
  */
 module.exports = function() {
+
+  this.blockUnauthorized = function blockUnauthorized(req, res, next) {
+    if(loggedInUser(req, res)) {
+      next();
+    } else {
+      renderUnauthorized(req, res);
+    }
+  };
+
+  this.redirectUnathorized = function renderUnauthorized(redirectUrl) {
+    return function(req, res, next) {
+      if(loggedInUser(req, res)) {
+        next();
+      } else {
+        res.redirect(redirectUrl);
+      }
+    };
+  };
 
   this.renderUnauthorized = function renderUnauthorized(req, res, templateVars = {}) {
     res.status(401);
@@ -35,7 +57,5 @@ module.exports = function() {
     }, templateVars));
   };
 
-  this.loggedInUser = function loggedInUser(req, res) {
-    return req.session.userRecord;
-  };
+  this.loggedInUser = loggedInUser;
 };

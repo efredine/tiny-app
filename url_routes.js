@@ -15,11 +15,7 @@ module.exports = function(app, host, port) {
   const BASE_URL =  `http://${host}:${port}/u/`;
 
   // render list of urls for a logged in user
-  app.get("/urls", (req, res) => {
-    if(!loggedInUser(req, res)) {
-      res.redirect("/login");
-      return;
-    }
+  app.get("/urls", redirectUnathorized("/login"), (req, res) => {
     let userUrls = models.urlsForUser(req.session.userRecord.id).map(urlRecord => {
       return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
     });
@@ -81,7 +77,7 @@ module.exports = function(app, host, port) {
   });
 
   // read url
-  app.get("/urls/:id", (req, res) => {
+  app.get("/urls/:id", blockUnauthorized, (req, res) => {
     if(!loggedInUser(req, res)) {
       renderUnauthorized(req, res);
       return;
