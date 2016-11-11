@@ -109,7 +109,7 @@ module.exports = function(app, host, port) {
         res.render('urls_show', getSessionVars(req, res, {
           shortUrl: req.params.id,
           baseUrl: BASE_URL,
-          longUrl: urlRecord.longUrl,
+          longUrl: longUrl,
           edit: true,
           errorMessage: `${longUrl} is not a valid URL`
         }));
