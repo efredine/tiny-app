@@ -36,7 +36,7 @@ function track(req, urlRecord) {
     req.session.trackingId = trackingId;
   }
   // record trackingId and headers for each click
-  urlRecord.clicks.push({trackingId: trackingId, headers: req.headers});
+  urlRecord.clicks.push({trackingId: trackingId, headers: req.headers, time: new Date()});
 }
 
 exports.routes = function(app) {
