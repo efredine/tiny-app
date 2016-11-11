@@ -55,7 +55,11 @@ module.exports = function(app) {
   });
 
   app.get("/login", (req, res) =>{
-    res.render('login', getSessionVars(req, res, {errorMessage: ""}));
+    if(loggedInUser(req, res)) {
+      res.redirect("/");
+    } else {
+      res.render('login', getSessionVars(req, res, {errorMessage: ""}));
+    }
   });
 
   app.post("/login", (req, res) => {
