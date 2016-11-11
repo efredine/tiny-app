@@ -17,7 +17,7 @@ module.exports = function(app) {
     }
     let userRecord = models.getUserForId(userId);
     if(bcrypt.compareSync(req.body.password, userRecord.password)) {
-      req.session.userRecord = userRecord;
+      req.session.userRecord = {email: userRecord.email, id: userRecord.id};
       return true;
     } else {
       return false;
