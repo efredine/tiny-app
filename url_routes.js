@@ -46,47 +46,6 @@ module.exports = function(app, host, port) {
       renderNotFound(req, res, getSessionVars(req, res));
     }
   }
-  // read url
-  app.get("/urls/:id", (req, res) => {
-    if(!loggedInUser(req, res)) {
-      res.redirect("/login");
-      return;
-    }
-    forAuthorizedUrl(req, res, urlRecord => {
-      res.render('urls_show', getSessionVars(req, res, {
-        shortUrl: req.params.id,
-        baseUrl: BASE_URL,
-        longUrl: urlRecord.longUrl,
-        edit: req.query.edit
-      }));
-    });
-  });
-
-  // update url
-  app.post("/urls/:id", (req, res) => {
-    if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res, getSessionVars(req, res));
-      return;
-    }
-    forAuthorizedUrl(req, res, urlRecord => {
-      urlRecord.longUrl = req.body.longUrl;
-      models.updateUrlForId(urlRecord.id, urlRecord);
-      res.redirect('/urls');
-    });
-  });
-
-  // delete url
-  app.post("/urls/:id/delete", (req, res) => {
-    if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res, getSessionVars(req, res));
-      return;
-    }
-    forAuthorizedUrl(req, res, urlRecord => {
-      models.deleteUrlForId(urlRecord.id);
-      res.redirect('/urls');
-    });
-  });
-
 /**
  * Returns a validated url or undefined.
  * @param  {string}
@@ -114,6 +73,60 @@ module.exports = function(app, host, port) {
     } else {
       res.render("urls_new", getSessionVars(req, res, {errorMessage: `${longUrl} is not a valid URL`}));
     }
+  });
+
+  // read url
+  app.get("/urls/:id", (req, res) => {
+    if(!loggedInUser(req, res)) {
+      res.redirect("/login");
+      return;
+    }
+    forAuthorizedUrl(req, res, urlRecord => {
+      res.render('urls_show', getSessionVars(req, res, {
+        shortUrl: req.params.id,
+        baseUrl: BASE_URL,
+        longUrl: urlRecord.longUrl,
+        edit: req.query.edit,
+        errorMessage: ""
+      }));
+    });
+  });
+
+  // update url
+  app.post("/urls/:id", (req, res) => {
+    if(!loggedInUser(req, res)) {
+      renderUnauthorized(req, res, getSessionVars(req, res));
+      return;
+    }
+    forAuthorizedUrl(req, res, urlRecord => {
+      let longUrl = req.body.longUrl;
+      let validatedUrl = checkUrl(longUrl);
+      if(validatedUrl) {
+        urlRecord.longUrl = validatedUrl;
+        models.updateUrlForId(urlRecord.id, urlRecord);
+        res.redirect('/urls');
+      } else {
+        res.render('urls_show', getSessionVars(req, res, {
+          shortUrl: req.params.id,
+          baseUrl: BASE_URL,
+          longUrl: urlRecord.longUrl,
+          edit: true,
+          errorMessage: `${longUrl} is not a valid URL`
+        }));
+      }
+    });
+  });
+
+  // delete url
+  app.post("/urls/:id/delete", (req, res) => {
+    if(!loggedInUser(req, res)) {
+      renderUnauthorized(req, res, getSessionVars(req, res));
+      return;
+    }
+    forAuthorizedUrl(req, res, urlRecord => {
+      models.deleteUrlForId(urlRecord.id);
+      res.redirect('/urls');
+    });
   });
 
   // redirection

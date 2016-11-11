@@ -15,6 +15,9 @@
             <label for="longUrl">Long URL:</label>
             <input class="form-control" id="longUrl" type="text" name="longUrl" value="<%= longUrl %>" <%= edit ? "" : "disabled"%>>
           </div>
+          <% if(errorMessage) { %>
+            <p class="error"><%= errorMessage %></p>
+          <% } %>
           <% if(edit) { %>
             <div class="form-group">
               <input class="btn btn-primary btn-block" type="submit" value="Update">
