@@ -78,7 +78,7 @@ module.exports = function(app, host, port) {
   // read url
   app.get("/urls/:id", (req, res) => {
     if(!loggedInUser(req, res)) {
-      res.redirect("/login");
+      renderUnauthorized(req, res, getSessionVars(req, res));
       return;
     }
     forAuthorizedUrl(req, res, urlRecord => {

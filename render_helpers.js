@@ -16,7 +16,7 @@ module.exports = function() {
       statusCode: 401,
       statusMessage: "Unauthorized",
       requestedUrl: req.url,
-      detailedMessage: "Access to that url not permitted."
+      detailedMessage: "You have to be logged in to access that URL."
     }, templateVars));
   };
 
@@ -26,7 +26,7 @@ module.exports = function() {
       statusCode: 403,
       statusMessage: "Forbidden",
       requestedUrl: req.url,
-      detailedMessage: ""
+      detailedMessage: "You don't have permission to access that URL."
     }, templateVars));
   };
 
