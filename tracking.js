@@ -2,6 +2,18 @@ const models = require('./models');
 const validUrl = require('valid-url');
 require('./auth_helpers')();
 
+function eventsByTrackingId(clicks) {
+  let group = {};
+  clicks.forEach(clickRecord => {
+    const trackingId = clickRecord.trackingId;
+    if(!group[trackingId]) {
+      group[trackingId] = [];
+    }
+    group[trackingId].push(clickRecord);
+  });
+  return group;
+}
+
 /**
  * Walks the clickCount array and generates summary statistics.
  * @param  {Object} urlRecord
@@ -12,19 +24,14 @@ function summaryStats(urlRecord) {
   const clickCount = clicks ? clicks.length : 0;
   let uniques = 0;
   if(clickCount > 0) {
-    let freq = {};
-    clicks.forEach(clickRecord => {
-      const trackingId = clickRecord.trackingId;
-      if(!freq[trackingId]) {
-        freq[trackingId] = 0;
-      }
-      freq[trackingId] += 1;
-    });
-    uniques = Object.keys(freq).length;
+    uniques = Object.keys(eventsByTrackingId(clicks)).length;
   }
   return {clickCount, uniques};
 }
 
+function clickDetails(urlRecord) {
+//
+}
 /**
  * Records a click record for the URL.  Click records are kept in an array.
  * @param  {Object} req the httpRequest object
