@@ -23,11 +23,7 @@ module.exports = function(app, host, port) {
   });
 
   // render a page where the user can enter a new url
-  app.get("/urls/new", (req, res) => {
-    if(!loggedInUser(req, res)) {
-      res.redirect("/login");
-      return;
-    }
+  app.get("/urls/new", redirectUnathorized("/login"), (req, res) => {
     res.render("urls_new", {errorMessage: ""});
   });
 
@@ -55,11 +51,7 @@ module.exports = function(app, host, port) {
   }
 
   // create url
-  app.post("/urls", (req, res) => {
-    if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res);
-      return;
-    }
+  app.post("/urls", blockUnauthorized, (req, res) => {
     let longUrl = req.body.longUrl;
     let validatedUrl = checkUrl(req.body.longUrl);
     if(validatedUrl) {
@@ -78,10 +70,6 @@ module.exports = function(app, host, port) {
 
   // read url
   app.get("/urls/:id", blockUnauthorized, (req, res) => {
-    if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res);
-      return;
-    }
     forAuthorizedUrl(req, res, urlRecord => {
       const templateVars = Object.assign({
         baseUrl: BASE_URL,
@@ -93,11 +81,7 @@ module.exports = function(app, host, port) {
   });
 
   // update url
-  app.post("/urls/:id", (req, res) => {
-    if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res);
-      return;
-    }
+  app.post("/urls/:id", blockUnauthorized, (req, res) => {
     forAuthorizedUrl(req, res, urlRecord => {
       let longUrl = req.body.longUrl;
       let validatedUrl = checkUrl(longUrl);
@@ -118,11 +102,7 @@ module.exports = function(app, host, port) {
   });
 
   // delete url
-  app.post("/urls/:id/delete", (req, res) => {
-    if(!loggedInUser(req, res)) {
-      renderUnauthorized(req, res);
-      return;
-    }
+  app.post("/urls/:id/delete", blockUnauthorized, (req, res) => {
     forAuthorizedUrl(req, res, urlRecord => {
       models.deleteUrlForId(urlRecord.id);
       res.redirect('/urls');
