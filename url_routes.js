@@ -14,19 +14,6 @@ require('./auth_helpers')();
 module.exports = function(app, host, port) {
   const BASE_URL =  `http://${host}:${port}/u/`;
 
-  // render list of urls for a logged in user
-  app.get("/urls", redirectUnathorized("/login"), (req, res) => {
-    let userUrls = models.urlsForUser(req.session.userRecord.id).map(urlRecord => {
-      return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
-    });
-    res.render('urls_index', {baseUrl: BASE_URL, urls: userUrls});
-  });
-
-  // render a page where the user can enter a new url
-  app.get("/urls/new", redirectUnathorized("/login"), (req, res) => {
-    res.render("urls_new", {errorMessage: ""});
-  });
-
   // helper function that abstracts the pattern repeated in read, update and delete
   function forAuthorizedUrl(req, res, onSuccess) {
     let urlRecord = models.getUrlForId(req.params.id);
@@ -40,15 +27,31 @@ module.exports = function(app, host, port) {
       renderNotFound(req, res);
     }
   }
-/**
- * Returns a validated url or undefined.
- * @param  {string}
- * @return {string}
- */
+
+  /**
+   * Returns a validated url or undefined.
+   * @param  {string}
+   * @return {string}
+   */
   function checkUrl(url) {
     let validatedUrl = validUrl.isUri(url);
     return validatedUrl;
   }
+
+  // ROUTES -------------------------------------------------------
+
+  // render list of urls for a logged in user
+  app.get("/urls", redirectUnathorized("/login"), (req, res) => {
+    let userUrls = models.urlsForUser(req.session.userRecord.id).map(urlRecord => {
+      return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
+    });
+    res.render('urls_index', {baseUrl: BASE_URL, urls: userUrls});
+  });
+
+  // render a page where the user can enter a new url
+  app.get("/urls/new", redirectUnathorized("/login"), (req, res) => {
+    res.render("urls_new", {errorMessage: ""});
+  });
 
   // create url
   app.post("/urls", blockUnauthorized, (req, res) => {
