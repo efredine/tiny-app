@@ -20,7 +20,9 @@ module.exports = function(app, host, port) {
       res.redirect("/login");
       return;
     }
-    let userUrls = models.urlsForUser(req.session.userRecord.id);
+    let userUrls = models.urlsForUser(req.session.userRecord.id).map(urlRecord => {
+      return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
+    });
     let templateVars = {baseUrl: BASE_URL, urls: userUrls};
     res.render('urls_index', getSessionVars(req, res, templateVars));
   });

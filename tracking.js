@@ -37,14 +37,11 @@ function track(req, urlRecord) {
   }
   // record trackingId and headers for each click
   urlRecord.clicks.push({trackingId: trackingId, headers: req.headers});
-  console.log(summaryStats(urlRecord));
 }
 
 exports.routes = function(app) {
   // redirection
   app.get("/u/:shortUrl", (req, res) => {
-    console.log('session', req.session);
-    console.log(req.headers);
     let urlRecord = models.getUrlForId(req.params.shortUrl);
     if (urlRecord && urlRecord.longUrl) {
       track(req, urlRecord);
