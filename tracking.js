@@ -2,6 +2,11 @@ const models = require('./models');
 const validUrl = require('valid-url');
 require('./auth_helpers')();
 
+/**
+ * Walks the clickCount array and generates summary statistics.
+ * @param  {Object} urlRecord
+ * @return {Object} With clickCount and unique user count.
+ */
 function summaryStats(urlRecord) {
   const clicks = urlRecord.clicks;
   const clickCount = clicks ? clicks.length : 0;
@@ -20,27 +25,40 @@ function summaryStats(urlRecord) {
   return {clickCount, uniques};
 }
 
+/**
+ * Records a click record for the URL.  Click records are kept in an array.
+ * @param  {Object} req the httpRequest object
+ * @param  {Object} the urlRecord
+ * @return {undefined}
+ */
 function track(req, urlRecord) {
+
   // don't track clicks by logged in users on their own links.
   let userRecord = loggedInUser(req);
   if(userRecord && urlRecord.userId === userRecord.id) {
     return;
   }
 
+  // If this URL doesn't have a click record array, create it.
   if(!urlRecord.clicks) {
     urlRecord.clicks = [];
   }
+
   let trackingId = req.session.trackingId;
+
+  // If this session doesn't have a tracking Id, craete a new one and store it in the session.
   if(!trackingId) {
     let trackingId = models.insertUser({});
     req.session.trackingId = trackingId;
   }
+
   // record trackingId and headers for each click
   urlRecord.clicks.push({trackingId: trackingId, headers: req.headers, time: new Date()});
 }
 
 exports.routes = function(app) {
-  // redirection
+
+  // redirection route
   app.get("/u/:shortUrl", (req, res) => {
     let urlRecord = models.getUrlForId(req.params.shortUrl);
     if (urlRecord && urlRecord.longUrl) {
