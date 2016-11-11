@@ -2,6 +2,7 @@ const models = require('./models');
 const validUrl = require('valid-url');
 require('./auth_helpers')();
 
+// group events by tracking id
 function eventsByTrackingId(clicks) {
   let group = {};
   clicks.forEach(clickRecord => {
@@ -29,6 +30,7 @@ function summaryStats(urlRecord) {
   return {clickCount, uniques};
 }
 
+// Return events grouped by tracking id in an array which is easier to iterate over for the consuming function.
 function clickDetails(urlRecord) {
   const clicks = urlRecord.clicks;
   if(clicks && clicks.length) {
