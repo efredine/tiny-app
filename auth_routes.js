@@ -66,12 +66,14 @@ module.exports = function(app, db) {
   function authenticate(req, res, callback) {
     let email = req.body.email;
     users.find({email: email}).toArray((err, result) => {
-      assert.equal(null, err);
+      if(err) {
+        renderInternalError(req, res, err);
+        return;
+      }
       if(result.length === 0) {
         callback(err, null);
       } else {
         let userRecord = result[0];
-        console.log(userRecord);
         bcrypt.compare(req.body.password, userRecord.password, (err, result) =>{
           if(result) {
             setLoggedIn(req, userRecord);
@@ -91,8 +93,10 @@ module.exports = function(app, db) {
   function checkIfValid(email, password, callback) {
     if(email && password) {
       users.find({email: email}).toArray((err, result) => {
-        assert.equal(null, err);
-        console.log(result);
+        if(err) {
+          renderInternalError(req, res, err);
+          return;
+        }
         if(result.length === 0) {
           callback(err, "");
         } else {
@@ -117,11 +121,17 @@ module.exports = function(app, db) {
 
   function insertRecord(req, res, password) {
     bcrypt.hash(req.body.password, saltRounds, (err, hashedPassword) => {
+      if(err) {
+        renderInternalError(req, res, error);
+        return;
+      }
       users.insert({ email: req.body.email, password: hashedPassword}, (err, result) => {
-        assert.equal(err, null);
+        if(err) {
+          renderInternalError(req, res, error);
+          return;
+        }
         assert.equal(1, result.result.n);
         let userRecord = result.ops[0];
-        console.log(userRecord);
         setLoggedIn(req, userRecord);
         res.redirect("/");
       });

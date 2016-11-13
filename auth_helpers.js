@@ -73,5 +73,17 @@ module.exports = function() {
     }, templateVars));
   };
 
+  // Render an internal error.
+  this.renderInternalError = function renderInternalError(req, res, err) {
+    res.status(500);
+    res.render('not_found', {
+      statusCode: 500,
+      statusMessage: "Internal Error",
+      requestedUrl: req.url,
+      detailedMessage: ""
+    });
+    console.error(err);
+  };
+
   this.loggedInUser = loggedInUser;
 };
