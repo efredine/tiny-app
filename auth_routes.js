@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const ObjectId = require('mongodb').ObjectID;
 const assert = require('assert');
 require('./auth_helpers')();
 const saltRounds = 10;
@@ -25,17 +26,17 @@ module.exports = function(app, db) {
 
       // a user record exists in the session, make sure it's still in the database.
       let sessionUserRecord = req.session.userRecord;
-      users.find({email: sessionUserRecord.email}).toArray((err, result) => {
+      users.findOne(new ObjectId(sessionUserRecord._id), (err, result) => {
         if(err) {
           renderInternalError(req, res, err);
           return;
         }
-        if(result.length === 0) {
+        if(result) {
+          //found it, so use it
+          res.locals.userName = sessionUserRecord.email;
+        } else {
           // not in the database, clear the session
           req.session = null;
-        } else {
-          //founc it, so use it
-          res.locals.userName = sessionUserRecord.email;
         }
 
         next();
@@ -54,7 +55,6 @@ module.exports = function(app, db) {
    * @param {Object} userRecord object
    */
   function setLoggedIn(req, userRecord) {
-    console.log(userRecord);
     req.session.userRecord = {email: userRecord.email, _id: userRecord._id};
   }
 
@@ -121,6 +121,7 @@ module.exports = function(app, db) {
     }
   });
 
+  // Hash the password and insert the new record into the database
   function insertRecord(req, res, password) {
     bcrypt.hash(req.body.password, saltRounds, (err, hashedPassword) => {
       if(err) {
