@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const models = require('./models');
+const assert = require('assert');
 require('./auth_helpers')();
 const saltRounds = 10;
 
@@ -7,7 +7,9 @@ const saltRounds = 10;
  * @param  {Object} app Express app instance
  * @return {undefined}
  */
-module.exports = function(app) {
+module.exports = function(app, db) {
+
+  const users = db.collection('users');
 
   /**
    * Simple middle-ware function that takes the email address from the session and puts it in res.local
@@ -15,25 +17,31 @@ module.exports = function(app) {
    */
   app.use((req, res, next) => {
 
-    // username has to exist as a variable or template rendering fails
-    res.locals.userName = undefined;
-
-    // if user is logged in, get the value for userName
     if(loggedInUser(req, res)) {
-
-      // a user record exists in the session, make sure it's still in the database.
-      let sessionUserRecord = req.session.userRecord;
-      let userRecord = models.getUserForId(sessionUserRecord.id);
-
-      // found it in the database, so use it
-      if(userRecord) {
-        res.locals.userName = userRecord.email;
-
-      // not in the database, clear the session
-      } else {
-        req.session = null;
-      }
+      res.locals.userName = req.session.userRecord.email;
+    } else {
+      res.locals.userName = undefined;
     }
+
+    // // username has to exist as a variable or template rendering fails
+    // res.locals.userName = undefined;
+
+    // // if user is logged in, get the value for userName
+    // if(loggedInUser(req, res)) {
+
+    //   // a user record exists in the session, make sure it's still in the database.
+    //   let sessionUserRecord = req.session.userRecord;
+    //   let userRecord = models.getUserForId(sessionUserRecord.id);
+
+    //   // found it in the database, so use it
+    //   if(userRecord) {
+    //     res.locals.userName = userRecord.email;
+
+    //   // not in the database, clear the session
+    //   } else {
+    //     req.session = null;
+    //   }
+    // }
 
     // carry on with route processing
     next();
@@ -52,22 +60,25 @@ module.exports = function(app) {
    * Authenticates if email is found and bycrypt'ed password compares.
    * @param  {Object} req object
    * @param  {Object} res object
-   * @param  {Function} onResult called once authentication is completed
+   * @param  {Function} callback called once authentication is completed
    * @return {undefined}
    */
-  function authenticate(req, res, onResult) {
+  function authenticate(req, res, callback) {
     let email = req.body.email;
-    let userId = models.findUserId("email", email);
-    if(!userId) {
-      onResult(null, false);
-      return;
-    }
-    let userRecord = models.getUserForId(userId);
-    bcrypt.compare(req.body.password, userRecord.password, (err, result) =>{
-      if(result) {
-        setLoggedIn(req, userRecord);
+    users.find({email: email}).toArray((err, result) => {
+      assert.equal(null, err);
+      if(result.length === 0) {
+        callback(err, null);
+      } else {
+        let userRecord = result[0];
+        console.log(userRecord);
+        bcrypt.compare(req.body.password, userRecord.password, (err, result) =>{
+          if(result) {
+            setLoggedIn(req, userRecord);
+          }
+          callback(err, result);
+        });
       }
-      onResult(err, result);
     });
   }
 
@@ -77,16 +88,19 @@ module.exports = function(app) {
    * @param  {String} password
    * @return {String} errorMessage
    */
-  function checkIfValid(email, password) {
+  function checkIfValid(email, password, callback) {
     if(email && password) {
-      let userId = models.findUserId("email", email);
-      if(userId) {
-        return `${email} already in use.`;
-      } else{
-        return "";
-      }
+      users.find({email: email}).toArray((err, result) => {
+        assert.equal(null, err);
+        console.log(result);
+        if(result.length === 0) {
+          callback(err, "");
+        } else {
+          callback(err, `${email} already in use.`);
+        }
+      });
     } else {
-      return "Email and password can't be empty.";
+      callback(null, "Email and password can't be empty.");
     }
   }
 
@@ -101,25 +115,29 @@ module.exports = function(app) {
     }
   });
 
+  function insertRecord(req, res, password) {
+    bcrypt.hash(req.body.password, saltRounds, (err, hashedPassword) => {
+      users.insert({ email: req.body.email, password: hashedPassword}, (err, result) => {
+        assert.equal(err, null);
+        assert.equal(1, result.result.n);
+        let userRecord = result.ops[0];
+        console.log(userRecord);
+        setLoggedIn(req, userRecord);
+        res.redirect("/");
+      });
+    });
+  }
+
   // Process a registration request.
   app.post("/register", (req, res) =>{
-    let errorMessage = checkIfValid(req.body.email, req.body.password);
-
-    // If invalid, render an error message.
-    if(errorMessage) {
-      res.render('register', {errorMessage: errorMessage});
-      return;
-    }
-
-    // If valid, hash the password, store it, mark the user logged in and redirect to home.
-    bcrypt.hash(req.body.password, saltRounds, (err, hashedPassword) => {
-      let userId = models.insertUser({
-        email: req.body.email,
-        password: hashedPassword
-      });
-      let userRecord = models.getUserForId(userId);
-      setLoggedIn(req, userRecord);
-      res.redirect("/");
+    checkIfValid(req.body.email, req.body.password, (err, errorMessage) => {
+      // If there's an error message, render it.
+      if(errorMessage) {
+        res.render('register', {errorMessage: errorMessage});
+      } else {
+        // If valid, hash the password, store it, mark the user logged in and redirect to home.
+        insertRecord(req, res);
+      }
     });
   });
 
