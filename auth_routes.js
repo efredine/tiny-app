@@ -17,34 +17,35 @@ module.exports = function(app, db) {
    */
   app.use((req, res, next) => {
 
+    // username has to exist as a variable or template rendering fails
+    res.locals.userName = undefined;
+
+    // if user is logged in, get the value for userName
     if(loggedInUser(req, res)) {
-      res.locals.userName = req.session.userRecord.email;
-    } else {
-      res.locals.userName = undefined;
+
+      // a user record exists in the session, make sure it's still in the database.
+      let sessionUserRecord = req.session.userRecord;
+      users.find({email: sessionUserRecord.email}).toArray((err, result) => {
+        if(err) {
+          renderInternalError(req, res, err);
+          return;
+        }
+        if(result.length === 0) {
+          // not in the database, clear the session
+          req.session = null;
+        } else {
+          //founc it, so use it
+          res.locals.userName = sessionUserRecord.email;
+        }
+
+        next();
+      });
+
+    } else{
+
+      next();
     }
 
-    // // username has to exist as a variable or template rendering fails
-    // res.locals.userName = undefined;
-
-    // // if user is logged in, get the value for userName
-    // if(loggedInUser(req, res)) {
-
-    //   // a user record exists in the session, make sure it's still in the database.
-    //   let sessionUserRecord = req.session.userRecord;
-    //   let userRecord = models.getUserForId(sessionUserRecord.id);
-
-    //   // found it in the database, so use it
-    //   if(userRecord) {
-    //     res.locals.userName = userRecord.email;
-
-    //   // not in the database, clear the session
-    //   } else {
-    //     req.session = null;
-    //   }
-    // }
-
-    // carry on with route processing
-    next();
   });
 
   /**
@@ -53,7 +54,8 @@ module.exports = function(app, db) {
    * @param {Object} userRecord object
    */
   function setLoggedIn(req, userRecord) {
-    req.session.userRecord = {email: userRecord.email, id: userRecord.id};
+    console.log(userRecord);
+    req.session.userRecord = {email: userRecord.email, _id: userRecord._id};
   }
 
   /**
