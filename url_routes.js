@@ -98,7 +98,7 @@ module.exports = function(app, db, options) {
       };
       urls.insert(urlRecord, (err, result) => {
         if(err) {
-          renderInternalError(req, res, error);
+          renderInternalError(req, res, err);
           return;
         }
         assert.equal(1, result.result.n);
@@ -137,14 +137,22 @@ module.exports = function(app, db, options) {
 
   // update url
   app.post("/urls/:id", blockUnauthorized, (req, res) => {
-    forAuthorizedUrl(req, res, urlRecord => {
+    forAuthorizedUrl(req, res, (err, urlRecord) => {
       let longUrl = req.body.longUrl;
       let validatedUrl = checkUrl(longUrl);
       if(validatedUrl) {
-        urlRecord.longUrl = validatedUrl;
-        urlRecord.lastUpdated = new Date();
-        models.updateUrlForId(urlRecord.id, urlRecord);
-        res.redirect('/urls');
+        urls.updateOne({_id: new ObjectId(urlRecord._id)}, {
+          $set: {
+            longUrl: validatedUrl,
+            lastUpdated: new Date()
+          }
+        }, (err, result) => {
+          if(err) {
+            renderInternalError(req, res, err);
+            return;
+          }
+          res.redirect('/urls');
+        });
       } else {
         const templateVars = Object.assign({
           baseUrl: BASE_URL,
@@ -158,7 +166,7 @@ module.exports = function(app, db, options) {
 
   // delete url
   app.post("/urls/:id/delete", blockUnauthorized, (req, res) => {
-    forAuthorizedUrl(req, res, urlRecord => {
+    forAuthorizedUrl(req, res, (err, urlRecord) => {
       models.deleteUrlForId(urlRecord.id);
       res.redirect('/urls');
     });
