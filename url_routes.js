@@ -31,7 +31,14 @@ module.exports = function(app, db, options) {
 
   // helper function that abstracts the pattern repeated in read, update and delete
   function forAuthorizedUrl(req, res, callback) {
-    urls.findOne(ObjectId(req.params.id), (err, urlRecord) => {
+    let urlObjectId = undefined;
+    try {
+      urlObjectId = new ObjectId(req.params.id);
+    } catch (err) {
+      renderNotFound(req, res);
+      return;
+    }
+    urls.findOne(urlObjectId, (err, urlRecord) => {
       if(err) {
         renderInternalError(req, res, err);
         return;
@@ -167,8 +174,9 @@ module.exports = function(app, db, options) {
   // delete url
   app.post("/urls/:id/delete", blockUnauthorized, (req, res) => {
     forAuthorizedUrl(req, res, (err, urlRecord) => {
-      models.deleteUrlForId(urlRecord.id);
-      res.redirect('/urls');
+      urls.deleteOne({_id: new ObjectId(urlRecord._id)}, (err, result) => {
+        res.redirect('/urls');
+      });
     });
   });
 
