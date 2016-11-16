@@ -26,7 +26,7 @@ module.exports = function(app, db) {
 
       // a user record exists in the session, make sure it's still in the database.
       let sessionUserRecord = req.session.userRecord;
-      users.findOne(sessionUserRecord.id, (err, result) => {
+      users.findOne(new ObjectId(sessionUserRecord._id), (err, result) => {
         if(err) {
           renderInternalError(req, res, err);
           return;
@@ -55,7 +55,7 @@ module.exports = function(app, db) {
    * @param {Object} userRecord object
    */
   function setLoggedIn(req, userRecord) {
-    req.session.userRecord = {email: userRecord.email, id: ObjectId(userRecord._id)};
+    req.session.userRecord = {email: userRecord.email, _id: userRecord._id};
   }
 
   /**
