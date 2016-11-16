@@ -75,3 +75,4 @@ module.exports = function() { // why did you export this as a function? if it wa
 
   this.loggedInUser = loggedInUser; // why are you exporting the function like this?
 };
+
