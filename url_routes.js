@@ -1,5 +1,17 @@
 const models = require('./models');
-const tracking = require('./tracking');
+const ObjectId = require('mongodb').ObjectID;
+const assert = require('assert');
+
+
+// const tracking = require('./tracking');
+const tracking = {
+  summaryStats: function(urlRecord) {
+    return {clickCount: 0, uniques: 0};
+  },
+  clickDetails: function(urlRecord) {
+    return [];
+  }
+};
 const validUrl = require('valid-url');
 require('./auth_helpers')();
 
@@ -7,25 +19,33 @@ require('./auth_helpers')();
  * Define routes for processing urls.
  *
  * @param  {object} app: express application object.
- * @param {String} host
- * @param {string} port
+ * @param {object} db mongo db
+ * @param  {object} options
  * @return {[undefined]}
  */
-module.exports = function(app, host, port) {
-  const BASE_URL =  `http://${host}:${port}/u/`;
+module.exports = function(app, db, options) {
+
+  const BASE_URL =  `http://${options.host}:${options.port}/u/`;
+  const users = db.collection('users');
+  const urls = db.collection('urls');
 
   // helper function that abstracts the pattern repeated in read, update and delete
-  function forAuthorizedUrl(req, res, onSuccess) {
-    let urlRecord = models.getUrlForId(req.params.id);
-    if (urlRecord) {
-      if(urlRecord.userId === req.session.userRecord.id) {
-        onSuccess(urlRecord);
-      } else {
-        renderForbidden(req, res);
+  function forAuthorizedUrl(req, res, callback) {
+    urls.findOne(ObjectId(req.params.id), (err, urlRecord) => {
+      if(err) {
+        renderInternalError(req, res, err);
+        return;
       }
-    } else {
-      renderNotFound(req, res);
-    }
+      if (urlRecord) {
+        if(new ObjectId(urlRecord.userId).equals(new ObjectId(req.session.userRecord._id))) {
+          callback(err, urlRecord);
+        } else {
+          renderForbidden(req, res);
+        }
+      } else {
+        renderNotFound(req, res);
+      }
+    });
   }
 
   /**
@@ -38,14 +58,24 @@ module.exports = function(app, host, port) {
     return validatedUrl;
   }
 
+  function generateRandomString() {
+    return Math.random().toString(36).substring(2, 8);
+  }
+
   // ROUTES -------------------------------------------------------
 
   // render list of urls for a logged in user
   app.get("/urls", redirectUnathorized("/login"), (req, res) => {
-    let userUrls = models.urlsForUser(req.session.userRecord.id).map(urlRecord => {
-      return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
+    urls.find({userId: new ObjectId(req.session.userRecord._id)}).toArray((err, result) => {
+      if(err) {
+        renderInternalError(req, res, err);
+        return;
+      }
+      let userUrls = result.map(urlRecord => {
+        return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
+      });
+      res.render('urls_index', {baseUrl: BASE_URL, urls: userUrls});
     });
-    res.render('urls_index', {baseUrl: BASE_URL, urls: userUrls});
   });
 
   // render a page where the user can enter a new url
@@ -59,13 +89,22 @@ module.exports = function(app, host, port) {
     let validatedUrl = checkUrl(req.body.longUrl);
     if(validatedUrl) {
       const now = new Date();
-      let shortUrl = models.insertUrl({
+      let urlRecord = {
+        shortUrl: generateRandomString(),
         longUrl: validatedUrl,
-        userId: req.session.userRecord.id,
+        userId: new ObjectId(req.session.userRecord._id),
         created: now,
         lastUpdated: now
+      };
+      urls.insert(urlRecord, (err, result) => {
+        if(err) {
+          renderInternalError(req, res, error);
+          return;
+        }
+        assert.equal(1, result.result.n);
+        let userRecord = result.ops[0];
+        res.redirect("/urls/" + urlRecord._id);
       });
-      res.redirect("/urls/" + shortUrl);
     } else {
       res.render("urls_new", {errorMessage: `${longUrl} is not a valid URL`});
     }
@@ -78,7 +117,8 @@ module.exports = function(app, host, port) {
    * form posts to the update url.
    */
   app.get("/urls/:id", blockUnauthorized, (req, res) => {
-    forAuthorizedUrl(req, res, urlRecord => {
+    forAuthorizedUrl(req, res, (err, urlRecord) => {
+      console.log(urlRecord);
       const edit = req.query.edit;
       let templateVars = Object.assign({
         baseUrl: BASE_URL,

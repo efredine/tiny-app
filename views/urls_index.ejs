@@ -20,13 +20,13 @@
     <% urls.forEach(url => { %>
       <tr class="table">
         <td><%= url.created.toLocaleDateString('en-US', {timeZone: "America/Vancouver"}) %></td>
-        <td><a href="/urls/<%= url.id %>"><%= baseUrl + url.id %></a></td>
-        <td><a href="/urls/<%= url.id %>"><%= url.longUrl %></a></td>
+        <td><a href="/urls/<%= url._id %>"><%= baseUrl + url.shortUrl %></a></td>
+        <td><a href="/urls/<%= url._id %>"><%= url.longUrl %></a></td>
         <td class="text-right"><%= url.clickCount %></td>
         <td class="text-right"><%= url.uniques %></td>
-        <td><a class="btn btn-primary btn-xs" href="/urls/<%= url.id %>?edit=true">Edit</a></td>
+        <td><a class="btn btn-primary btn-xs" href="/urls/<%= url._id %>?edit=true">Edit</a></td>
         <td>
-          <form method="POST" action="/urls/<%= url.id %>/delete" >
+          <form method="POST" action="/urls/<%= url._id %>/delete" >
             <input class="btn btn-danger btn-xs" type='submit' value='Delete'>
           </form>
         </td>
