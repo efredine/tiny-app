@@ -23,10 +23,15 @@ function eventsByTrackingId(clicks) {
 function summaryStats(urlRecord) {
   const clicks = urlRecord.clicks;
   const clickCount = clicks ? clicks.length : 0;
+  // not quite sure what the data looks like, but as long as
+  // eventsByTrackingId returns an empty object, this might work:
+  // 
+  // const uniques = Object.keys(eventsByTrackingId(clicks)).length
   let uniques = 0;
   if(clickCount > 0) {
     uniques = Object.keys(eventsByTrackingId(clicks)).length;
   }
+
   return {clickCount, uniques};
 }
 

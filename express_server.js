@@ -32,7 +32,8 @@ app.get("/", redirectUnathorized("/login"), (req, res) => {
 // Configure routes for other modules.
 authRoutes(app);
 urlRoutes(app, HOST, PORT);
-tracking.routes(app);
+tracking.routes(app); // for consistency it might be good to put all the routes in a routes folder
+                      // and make the way that routes are applied consistent.
 
 // Catch any requests not caught by defined routes.
 app.all("*", (req, res) => {
