@@ -125,7 +125,6 @@ module.exports = function(app, db, options) {
    */
   app.get("/urls/:id", blockUnauthorized, (req, res) => {
     forAuthorizedUrl(req, res, (err, urlRecord) => {
-      console.log(urlRecord);
       const edit = req.query.edit;
       let templateVars = Object.assign({
         baseUrl: BASE_URL,
