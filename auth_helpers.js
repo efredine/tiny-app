@@ -1,5 +1,5 @@
 // Returns the user record for a logged in user.  This will be undefined if the user is not logged in.
-function loggedInUser(req, res) {
+function loggedInUser(req, res) {  // res is not being used here
   return req.session ? req.session.userRecord : undefined;
 }
 
@@ -8,7 +8,7 @@ function loggedInUser(req, res) {
  *
  * @return {undefined}
  */
-module.exports = function() {
+module.exports = function() { // why did you export this as a function? if it was to store
 
   /**
    * Used in route definitions to render an unauthorized page if the user is not logged in.
@@ -16,7 +16,7 @@ module.exports = function() {
    * app.post("/urls", blockUnauthorized, (req, res) => {// processing for logged in user}
    */
   this.blockUnauthorized = function blockUnauthorized(req, res, next) {
-    if(loggedInUser(req, res)) {
+    if(loggedInUser(req, res)) { // res not being used
       next();
     } else {
       renderUnauthorized(req, res);
@@ -73,5 +73,6 @@ module.exports = function() {
     }, templateVars));
   };
 
-  this.loggedInUser = loggedInUser;
+  this.loggedInUser = loggedInUser; // why are you exporting the function like this?
 };
+

@@ -50,9 +50,17 @@ function deleteRecord(model, id) {
 
 function find(modelKey, field, value) {
   let model = data[modelKey];
-  return Object.keys(model).find(id => {
+  return Object.keys(model).find(id => { 
     return model[id][field] === value;
   });
+
+  // Nice use of find here!
+  // FYI there is a concise syntax you can use here
+  // because your find function is a one-liner.
+  // The 'return' is implicit.
+  let model = data[modelKey];
+  return Object.keys(model)
+          .find(id => model[id][field] === value);
 }
 
 function urlsForUser(userId) {
@@ -64,7 +72,7 @@ function urlsForUser(userId) {
 }
 
 module.exports = {
-  insertUser: insert.bind(null, 'users'),
+  insertUser: insert.bind(null, 'users'),  // hehe, very clever.
   getUserForId: get.bind(null, 'users'),
   findUserId: find.bind(null, 'users'),
   updateUserForId: update.bind(null, 'users'),
