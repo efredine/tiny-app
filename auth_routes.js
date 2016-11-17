@@ -26,11 +26,8 @@ module.exports = function(app, db) {
 
       // a user record exists in the session, make sure it's still in the database.
       let sessionUserRecord = req.session.userRecord;
-      users.findOne(new ObjectId(sessionUserRecord._id), (err, result) => {
-        if(err) {
-          renderInternalError(req, res, err);
-          return;
-        }
+      users.findOne(new ObjectId(sessionUserRecord._id))
+      .then( result => {
         if(result) {
           //found it, so use it
           res.locals.userName = sessionUserRecord.email;
@@ -40,6 +37,9 @@ module.exports = function(app, db) {
         }
 
         next();
+
+      }).catch(err => {
+        renderInternalError(req, res, err);
       });
 
     } else{
@@ -58,29 +58,46 @@ module.exports = function(app, db) {
     req.session.userRecord = {email: userRecord.email, _id: userRecord._id};
   }
 
+  // wrap bcrypt callback in a promise
+  function checkPassword(userPassword, onRecordPassword) {
+    return new Promise((resolve, reject) => {
+      bcrypt.compare(userPassword, onRecordPassword, (err, result) => {
+        if(err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  }
+
+  // wrap bcrypt callback in a promise
+  function hashPassword(plainText) {
+    return new Promise((resolve, reject) => {
+      bcrypt.hash(plainText, saltRounds, (err, hashedPassword) => {
+        if(err) {
+          reject(err);
+        } else {
+          resolve(hashedPassword);
+        }
+      });
+    });
+  }
+
   /**
-   * Authenticates if email is found and bycrypt'ed password compares.
-   * @param  {Object} req object
-   * @param  {Object} res object
-   * @param  {Function} callback called once authentication is completed
-   * @return {undefined}
+   * @param {object} req HTTP request object
+   * @return {Promise} Logged in user record if user is authenticated or undefined otherwise.
    */
-  function authenticate(req, res, callback) {
+  function authenticate(req) {
     let email = req.body.email;
-    users.find({email: email}).toArray((err, result) => {
-      if(err) {
-        renderInternalError(req, res, err);
-        return;
-      }
-      if(result.length === 0) {
-        callback(err, null);
-      } else {
-        let userRecord = result[0];
-        bcrypt.compare(req.body.password, userRecord.password, (err, result) =>{
-          if(result) {
+    return users.find({email: email}).toArray().then( searchResult => {
+      if(searchResult.length === 1) {
+        let userRecord = searchResult[0];
+        return checkPassword(req.body.password, userRecord.password).then( passwordOk => {
+          if(passwordOk) {
             setLoggedIn(req, userRecord);
+            return userRecord;
           }
-          callback(err, result);
         });
       }
     });
@@ -90,23 +107,19 @@ module.exports = function(app, db) {
    * Email and password can't be blank and the email must not already be registered.
    * @param  {String} email
    * @param  {String} password
-   * @return {String} errorMessage
+   * @return {Promise} with an object containing a errorMessage if the result is invalid.
    */
-  function checkIfValid(email, password, callback) {
+  function checkIfValid(email, password) {
     if(email && password) {
-      users.find({email: email}).toArray((err, result) => {
-        if(err) {
-          renderInternalError(req, res, err);
-          return;
-        }
+      return users.find({email: email}).toArray().then( result => {
         if(result.length === 0) {
-          callback(err, "");
+          return {valid: true};
         } else {
-          callback(err, `${email} already in use.`);
+          return {valid: false, errorMessage: `${email} already in use.`};
         }
       });
     } else {
-      callback(null, "Email and password can't be empty.");
+      return Promise.resolve({valid: false, errorMessage: "Email and password can't be empty."});
     }
   }
 
@@ -122,17 +135,9 @@ module.exports = function(app, db) {
   });
 
   // Hash the password and insert the new record into the database
-  function insertRecord(req, res, password) {
-    bcrypt.hash(req.body.password, saltRounds, (err, hashedPassword) => {
-      if(err) {
-        renderInternalError(req, res, error);
-        return;
-      }
-      users.insert({ email: req.body.email, password: hashedPassword}, (err, result) => {
-        if(err) {
-          renderInternalError(req, res, error);
-          return;
-        }
+  function insertRecord(req, res) {
+    return hashPassword(req.body.password).then( hashedPassword => {
+      return users.insert({ email: req.body.email, password: hashedPassword}).then(result => {
         assert.equal(1, result.result.n);
         let userRecord = result.ops[0];
         setLoggedIn(req, userRecord);
@@ -143,14 +148,16 @@ module.exports = function(app, db) {
 
   // Process a registration request.
   app.post("/register", (req, res) =>{
-    checkIfValid(req.body.email, req.body.password, (err, errorMessage) => {
+    checkIfValid(req.body.email, req.body.password).then(check => {
       // If there's an error message, render it.
-      if(errorMessage) {
-        res.render('register', {errorMessage: errorMessage});
-      } else {
+      if(check.valid) {
         // If valid, hash the password, store it, mark the user logged in and redirect to home.
-        insertRecord(req, res);
+        return insertRecord(req, res);
+      } else {
+        res.render('register', {errorMessage: check.errorMessage});
       }
+    }).catch(err => {
+      renderInternalError(req, res, err);
     });
   });
 
@@ -165,8 +172,7 @@ module.exports = function(app, db) {
 
   // Process a log in request by authenticating.
   app.post("/login", (req, res) => {
-    authenticate(req, res, (err, result) => {
-
+    authenticate(req).then(result => {
       // If successfully authenticated, redirect to home.
       if(result) {
         res.redirect("/");
@@ -175,6 +181,8 @@ module.exports = function(app, db) {
       } else {
         res.status(401).render('login', {errorMessage: "User name or password incorrect."});
       }
+    }).catch(err => {
+      renderInternalError(req, res, err);
     });
   });
 
