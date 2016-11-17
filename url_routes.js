@@ -74,15 +74,14 @@ module.exports = function(app, db, options) {
 
   // render list of urls for a logged in user
   app.get("/urls", redirectUnathorized("/login"), (req, res) => {
-    urls.find({userId: new ObjectId(req.session.userRecord._id)}).toArray((err, result) => {
+    urls.find({userId: new ObjectId(req.session.userRecord._id)}).toArray((err, urlRecords) => {
       if(err) {
         renderInternalError(req, res, err);
         return;
       }
-      let userUrls = result.map(urlRecord => {
-        return Object.assign({}, urlRecord, {clickCount: 0, uniques: 0});
+      tracking.summaryStats(urlRecords, (err, urlsWithStats) => {
+        res.render('urls_index', {baseUrl: BASE_URL, urls: urlsWithStats});
       });
-      res.render('urls_index', {baseUrl: BASE_URL, urls: userUrls});
     });
   });
 

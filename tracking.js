@@ -11,17 +11,48 @@ function init(db) {
   events = db.collection('events');
 }
 
-// group events by tracking id
-function eventsByTrackingId(events) {
+function groupBy(arr, keyFn) {
   let group = {};
-  events.forEach(event => {
-    const trackingId = event.trackingId;
-    if(!group[trackingId]) {
-      group[trackingId] = [];
+  arr.forEach(x => {
+    let key = keyFn(x);
+    if(!group[key]) {
+      group[key] = [];
     }
-    group[trackingId].push(event);
+    group[key].push(x);
   });
   return group;
+}
+
+function summaryStats(urls, callback) {
+  events.aggregate([
+    {
+      $match: { shortUrl: { $in: urls.map(x => x.shortUrl) } }
+    },
+    {
+      $group: {
+        _id: {
+          shortUrl: "$shortUrl",
+          trackingId: "$trackingId"
+        },
+        count: {
+          $sum: 1
+        }
+      }
+    }
+  ]).toArray((err, result) => {
+    if(err) {
+      callback(err, result);
+    } else {
+      let groups = groupBy(result, x => x._id.shortUrl);
+      callback(null, urls.map(urlRecord => {
+        let group = groups[urlRecord.shortUrl];
+        return Object.assign(urlRecord, {
+          uniques: group.length,
+          clickCount: group.reduce((sum, x) => sum + x.count, 0)
+        });
+      }));
+    }
+  });
 }
 
 function eventsForUrl(urlRecord, callback) {
@@ -36,7 +67,7 @@ function stats(urlRecord, callback) {
       callback(err, null);
       return;
     }
-    let groups = eventsByTrackingId(events);
+    let groups = groupBy(events, x => x.trackingId);
     let groupsFormatted = Object.keys(groups).map(groupKey => {
       const userAgent = groups[groupKey][0].headers['user-agent'];
       return {
@@ -97,5 +128,5 @@ function track(req, urlRecord) {
 }
 
 module.exports = {
-  init, track, stats
+  init, track, stats, summaryStats
 };
