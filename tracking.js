@@ -2,48 +2,69 @@ const models = require('./models');
 const validUrl = require('valid-url');
 require('./auth_helpers')();
 
+var trackingIds = undefined;
+var events = undefined;
+
+// Mongo db collection access
+function init(db) {
+  trackingIds = db.collection('trackingIds');
+  events = db.collection('events');
+}
+
 // group events by tracking id
-function eventsByTrackingId(clicks) {
+function eventsByTrackingId(events) {
   let group = {};
-  clicks.forEach(clickRecord => {
-    const trackingId = clickRecord.trackingId;
+  events.forEach(event => {
+    const trackingId = event.trackingId;
     if(!group[trackingId]) {
       group[trackingId] = [];
     }
-    group[trackingId].push(clickRecord);
+    group[trackingId].push(event);
   });
   return group;
 }
 
-/**
- * Walks the clickCount array and generates summary statistics.
- * @param  {Object} urlRecord
- * @return {Object} With clickCount and unique user count.
- */
-function summaryStats(urlRecord) {
-  const clicks = urlRecord.clicks;
-  const clickCount = clicks ? clicks.length : 0;
-  let uniques = 0;
-  if(clickCount > 0) {
-    uniques = Object.keys(eventsByTrackingId(clicks)).length;
-  }
-  return {clickCount, uniques};
+function eventsForUrl(urlRecord, callback) {
+  events.find({shortUrl: urlRecord.shortUrl}).toArray((err, events) => {
+    callback(err, events);
+  });
 }
 
-// Return events grouped by tracking id in an array which is easier to iterate over for the consuming function.
-function clickDetails(urlRecord) {
-  const clicks = urlRecord.clicks;
-  if(clicks && clicks.length) {
-    const groups = eventsByTrackingId(clicks);
-    return Object.keys(groups)
-    .map(groupKey => {
+function stats(urlRecord, callback) {
+  eventsForUrl(urlRecord, (err, events) => {
+    if(err) {
+      callback(err, null);
+      return;
+    }
+    let groups = eventsByTrackingId(events);
+    let groupsFormatted = Object.keys(groups).map(groupKey => {
       const userAgent = groups[groupKey][0].headers['user-agent'];
-      return {trackingId: groupKey, userAgent: userAgent, events: groups[groupKey]};
+      return {
+        trackingId: groupKey,
+        userAgent: userAgent,
+        events: groups[groupKey]
+      };
     });
-  } else {
-    return [];
-  }
+    let result = {
+      eventDetails: groupsFormatted,
+      uniques: groupsFormatted.length,
+      clickCount: groupsFormatted.reduce( (sum, x) => sum + x.events.length, 0)
+    };
+    callback(null, result);
+  });
 }
+
+function insertEvent(req, urlRecord, trackingId) {
+  events.insertOne({
+    trackingId: trackingId,
+    urlRecordId: urlRecord._id,
+    longUrl: urlRecord.longUrl,
+    shortUrl: urlRecord.shortUrl,
+    headers: req.headers,
+    time: new Date()
+  });
+}
+
 /**
  * Records a click record for the URL.  Click records are kept in an array.
  * @param  {Object} req the httpRequest object
@@ -54,34 +75,27 @@ function track(req, urlRecord) {
 
   // don't track clicks by logged in users on their own links.
   let userRecord = loggedInUser(req);
-  if(userRecord && urlRecord.userId === userRecord.id) {
+  if(userRecord && urlRecord.userId === userRecord._id) {
     return;
-  }
-
-  // If this URL doesn't have a click record array, create it.
-  if(!urlRecord.clicks) {
-    urlRecord.clicks = [];
   }
 
   let trackingId = req.session.trackingId;
 
   // If this session doesn't have a tracking Id, create a new one and store it in the session.
   if(!trackingId) {
-    trackingId = models.insertUser({});
-    req.session.trackingId = trackingId;
+    let userAgent = req.headers['user-agent'];
+    trackingIds.insertOne({userAgent}, (err, result) => {
+      if(!err && result.insertedCount === 1) {
+        trackingId = result[0]._id;
+        req.session.trackingId = trackingId;
+        insertEvent(req, urlRecord, trackingId);
+      }
+    });
+  } else {
+    insertEvent(req, urlRecord, trackingId);
   }
-
-  // record trackingId and headers for each click
-  urlRecord.clicks.push({trackingId: trackingId, headers: req.headers, time: new Date()});
 }
 
-exports.routes = function(app) {
-
-  // redirection route
+module.exports = {
+  init, track, stats
 };
-
-exports.track = function() {
-  // placeholder
-};
-exports.summaryStats = summaryStats;
-exports.clickDetails = clickDetails;

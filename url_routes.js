@@ -1,20 +1,19 @@
 const models = require('./models');
 const ObjectId = require('mongodb').ObjectID;
 const assert = require('assert');
+const tracking = require('./tracking');
 
-
-// const tracking = require('./tracking');
-const tracking = {
-  summaryStats: function(urlRecord) {
-    return {clickCount: 0, uniques: 0};
-  },
-  clickDetails: function(urlRecord) {
-    return [];
-  },
-  track: function() {
-    //
-  }
-};
+// const tracking = {
+//   summaryStats: function(urlRecord) {
+//     return {clickCount: 0, uniques: 0};
+//   },
+//   clickDetails: function(urlRecord) {
+//     return [];
+//   },
+//   track: function() {
+//     //
+//   }
+// };
 const validUrl = require('valid-url');
 require('./auth_helpers')();
 
@@ -31,6 +30,8 @@ module.exports = function(app, db, options) {
   const BASE_URL =  `http://${options.host}:${options.port}/u/`;
   const users = db.collection('users');
   const urls = db.collection('urls');
+
+  tracking.init(db);
 
   // helper function that abstracts the pattern repeated in read, update and delete
   function forAuthorizedUrl(req, res, callback) {
@@ -79,7 +80,7 @@ module.exports = function(app, db, options) {
         return;
       }
       let userUrls = result.map(urlRecord => {
-        return Object.assign({}, urlRecord, tracking.summaryStats(urlRecord));
+        return Object.assign({}, urlRecord, {clickCount: 0, uniques: 0});
       });
       res.render('urls_index', {baseUrl: BASE_URL, urls: userUrls});
     });
@@ -132,12 +133,17 @@ module.exports = function(app, db, options) {
         errorMessage: ""
       }, urlRecord);
       if(!edit) {
-        templateVars = Object.assign(templateVars,
-          tracking.summaryStats(urlRecord),
-          {eventDetails: tracking.clickDetails(urlRecord)}
-        );
+        tracking.stats(urlRecord, (err, stats) => {
+          console.log(stats);
+          if(err) {
+            renderInternalError(req, res);
+            return;
+          }
+          res.render('urls_show', Object.assign(templateVars, stats));
+        });
+      } else {
+        res.render('urls_show', templateVars);
       }
-      res.render('urls_show', templateVars);
     });
   });
 
