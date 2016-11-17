@@ -31,11 +31,8 @@ module.exports = function(app, db, options) {
 
   // helper function that abstracts the pattern repeated in read, update and delete
   function forAuthorizedUrl(req, res, callback) {
-    let urlObjectId = undefined;
-    try {
-      urlObjectId = new ObjectId(req.params.id);
-    } catch (err) {
-      renderNotFound(req, res);
+    const urlObjectId = getObjectIdIfValid(req, res, req.params.id);
+    if(!urlObjectId) {
       return;
     }
     urls.findOne(urlObjectId, (err, urlRecord) => {

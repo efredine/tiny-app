@@ -1,3 +1,5 @@
+const ObjectId = require('mongodb').ObjectID;
+
 // Returns the user record for a logged in user.  This will be undefined if the user is not logged in.
 function loggedInUser(req, res) {
   return req.session ? req.session.userRecord : undefined;
@@ -10,6 +12,18 @@ function loggedInUser(req, res) {
  */
 module.exports = function() {
 
+  /**
+   * Returns a valid object id or renders a not found error.
+   */
+  this.getObjectIdIfValid = function getObjectIdIfValid(req, res, id) {
+    let objectId = undefined;
+    try {
+      objectId = new ObjectId(req.params.id);
+    } catch (err) {
+      renderNotFound(req, res);
+    }
+    return objectId;
+  };
   /**
    * Used in route definitions to render an unauthorized page if the user is not logged in.
    * If the user is logged in, it passes processing on to the route.  Example usage:
