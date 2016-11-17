@@ -34,7 +34,7 @@ module.exports = function(app, db, options) {
   tracking.init(db);
 
   // helper function that abstracts the pattern repeated in read, update and delete
-  function forAuthorizedUrl(req, res, callback) {
+  function forAuthorizedUrl(req, res, authorized) {
     const urlObjectId = getObjectIdIfValid(req, res, req.params.id);
     if(!urlObjectId) {
       return;
@@ -46,7 +46,7 @@ module.exports = function(app, db, options) {
       }
       if (urlRecord) {
         if(new ObjectId(urlRecord.userId).equals(new ObjectId(req.session.userRecord._id))) {
-          callback(err, urlRecord);
+          authorized(urlRecord);
         } else {
           renderForbidden(req, res);
         }
@@ -74,14 +74,12 @@ module.exports = function(app, db, options) {
 
   // render list of urls for a logged in user
   app.get("/urls", redirectUnathorized("/login"), (req, res) => {
-    urls.find({userId: new ObjectId(req.session.userRecord._id)}).toArray((err, urlRecords) => {
-      if(err) {
-        renderInternalError(req, res, err);
-        return;
-      }
+    urls.find({userId: new ObjectId(req.session.userRecord._id)}).toArray().then( urlRecords => {
       tracking.summaryStats(urlRecords, (err, urlsWithStats) => {
         res.render('urls_index', {baseUrl: BASE_URL, urls: urlsWithStats});
       });
+    }).catch(err => {
+      renderInternalError(req, res, err);
     });
   });
 
@@ -124,7 +122,7 @@ module.exports = function(app, db, options) {
    * form posts to the update url.
    */
   app.get("/urls/:id", blockUnauthorized, (req, res) => {
-    forAuthorizedUrl(req, res, (err, urlRecord) => {
+    forAuthorizedUrl(req, res, urlRecord => {
       const edit = req.query.edit;
       let templateVars = Object.assign({
         baseUrl: BASE_URL,
@@ -148,7 +146,7 @@ module.exports = function(app, db, options) {
 
   // update url
   app.post("/urls/:id", blockUnauthorized, (req, res) => {
-    forAuthorizedUrl(req, res, (err, urlRecord) => {
+    forAuthorizedUrl(req, res, urlRecord => {
       let longUrl = req.body.longUrl;
       let validatedUrl = checkUrl(longUrl);
       if(validatedUrl) {
@@ -177,7 +175,7 @@ module.exports = function(app, db, options) {
 
   // delete url
   app.post("/urls/:id/delete", blockUnauthorized, (req, res) => {
-    forAuthorizedUrl(req, res, (err, urlRecord) => {
+    forAuthorizedUrl(req, res, urlRecord => {
       urls.deleteOne({_id: new ObjectId(urlRecord._id)}, (err, result) => {
         res.redirect('/urls');
       });
