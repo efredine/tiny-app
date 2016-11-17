@@ -78,16 +78,10 @@ function track(req, urlRecord) {
 exports.routes = function(app) {
 
   // redirection route
-  app.get("/u/:shortUrl", (req, res) => {
-    let urlRecord = models.getUrlForId(req.params.shortUrl);
-    if (urlRecord && urlRecord.longUrl) {
-      track(req, urlRecord);
-      res.redirect(urlRecord.longUrl);
-    } else {
-      renderNotFound(req, res);
-    }
-  });
 };
 
+exports.track = function() {
+  // placeholder
+};
 exports.summaryStats = summaryStats;
 exports.clickDetails = clickDetails;

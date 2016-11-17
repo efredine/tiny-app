@@ -40,7 +40,6 @@ MongoClient.connect(mongoURL, function(err, db) {
   // Configure routes for other modules.
   authRoutes(app, db);
   urlRoutes(app, db, {host: HOST, port: PORT});
-  tracking.routes(app);
 
   // Catch any requests not caught by defined routes.
   app.all("*", (req, res) => {

@@ -10,6 +10,9 @@ const tracking = {
   },
   clickDetails: function(urlRecord) {
     return [];
+  },
+  track: function() {
+    //
   }
 };
 const validUrl = require('valid-url');
@@ -173,6 +176,22 @@ module.exports = function(app, db, options) {
       urls.deleteOne({_id: new ObjectId(urlRecord._id)}, (err, result) => {
         res.redirect('/urls');
       });
+    });
+  });
+
+  // redirection
+  app.get("/u/:shortUrl", (req, res) => {
+    urls.findOne({shortUrl: req.params.shortUrl}, (err, urlRecord) => {
+      if(err) {
+        renderInternalError(req, res);
+        return;
+      }
+      if (urlRecord && urlRecord.longUrl) {
+        tracking.track(req, urlRecord);
+        res.redirect(urlRecord.longUrl);
+      } else {
+        renderNotFound(req, res);
+      }
     });
   });
 
