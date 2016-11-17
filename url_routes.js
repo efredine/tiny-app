@@ -39,11 +39,7 @@ module.exports = function(app, db, options) {
     if(!urlObjectId) {
       return;
     }
-    urls.findOne(urlObjectId, (err, urlRecord) => {
-      if(err) {
-        renderInternalError(req, res, err);
-        return;
-      }
+    urls.findOne(urlObjectId).then(urlRecord => {
       if (urlRecord) {
         if(new ObjectId(urlRecord.userId).equals(new ObjectId(req.session.userRecord._id))) {
           authorized(urlRecord);
@@ -53,6 +49,8 @@ module.exports = function(app, db, options) {
       } else {
         renderNotFound(req, res);
       }
+    }).catch(err => {
+      renderInternalError(req, res, err);
     });
   }
 
@@ -101,14 +99,12 @@ module.exports = function(app, db, options) {
         created: now,
         lastUpdated: now
       };
-      urls.insert(urlRecord, (err, result) => {
-        if(err) {
-          renderInternalError(req, res, err);
-          return;
-        }
+      urls.insert(urlRecord).then(result => {
         assert.equal(1, result.result.n);
         let userRecord = result.ops[0];
         res.redirect("/urls/" + urlRecord._id);
+      }).catch(err => {
+        renderInternalError(req, res, err);
       });
     } else {
       res.render("urls_new", {errorMessage: `${longUrl} is not a valid URL`});
