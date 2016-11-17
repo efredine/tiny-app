@@ -45,7 +45,7 @@ function summaryStats(urls, callback) {
     } else {
       let groups = groupBy(result, x => x._id.shortUrl);
       callback(null, urls.map(urlRecord => {
-        let group = groups[urlRecord.shortUrl];
+        let group = groups[urlRecord.shortUrl] ? groups[urlRecord.shortUrl] : [];
         return Object.assign(urlRecord, {
           uniques: group.length,
           clickCount: group.reduce((sum, x) => sum + x.count, 0)
